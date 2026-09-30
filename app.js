@@ -250,7 +250,15 @@ function renderLearningMethod(){
   if(!el)return;
   el.innerHTML='<div class="learning-flow"><b>Learn</b><span>افهم المفهوم</span><b>Practice</b><span>طبّق</span><b>Build</b><span>اربطه بمشروع</span><b>Explain</b><span>اشرحه بصوتك</span><b>Review</b><span>راجع أخطاءك</span></div><ul>'+state.learning.rules.map(x=>"<li>"+escapeHtml(x)+"</li>").join("")+"</ul>";
 }
-{$("careerItems").innerHTML=careerItems.map(x=>`<label class="career-item"><div><b>${x}</b><span>${state.career[x]?'Completed':'Not completed'}</span></div><input data-career="${x}" type="checkbox" ${state.career[x]?'checked':''}></label>`).join("");document.querySelectorAll("[data-career]").forEach(x=>x.onchange=e=>{state.career[e.target.dataset.career]=e.target.checked;persist()})}
+function renderCareer(){
+  const el=$("careerItems");
+  if(!el)return;
+  el.innerHTML=careerItems.map(x=>`<label class="career-item"><div><b>${x}</b><span>${state.career[x]?'Completed':'Not completed'}</span></div><input data-career="${x}" type="checkbox" ${state.career[x]?'checked':''}></label>`).join("");
+  document.querySelectorAll("[data-career]").forEach(x=>x.onchange=e=>{
+    state.career[e.target.dataset.career]=e.target.checked;
+    persist();
+  });
+}
 
 function renderHealth(){
   const d=state.health[selectedDate]||{};
