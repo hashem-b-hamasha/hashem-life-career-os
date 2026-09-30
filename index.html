@@ -11,25 +11,10 @@
   <div class="auth-card">
     <div class="brand">H<span>•</span>OS</div>
     <h1>Hashem Life & Career OS</h1>
-    <p>الدخول محفوظ على حسابك حتى تقدر تكمل خطتك من أي جهاز.</p>
-    <div class="tabs">
-      <button id="loginTab" class="tab active" type="button">تسجيل الدخول</button>
-      <button id="signupTab" class="tab" type="button">إنشاء حساب</button>
-    </div>
-    <div id="authKeyBox">
-      <input id="authCloudKey" type="password" placeholder="Supabase Publishable Key">
-      <small class="muted">أول مرة فقط: الصق Publishable Key من Supabase → Settings → API Keys.</small>
-    </div>
-    <input id="authPhone" type="tel" inputmode="tel" placeholder="رقم الهاتف بصيغة دولية مثل +9627..." autocomplete="tel">
-    <input id="authPassword" type="password" value="2003" readonly autocomplete="off" aria-label="الرقم السري الثابت">
-    <small class="muted">الرقم السري ثابت لهذا النظام ولا يمكن تغييره من الموقع.</small>
+    <p>أدخل الرقم السري للدخول إلى النظام.</p>
+    <input id="authPassword" type="password" inputmode="numeric" placeholder="الرقم السري" autocomplete="off">
     <button id="authSubmit" class="primary" type="button">دخول</button>
-    <div id="otpBox" style="display:none">
-      <input id="authOtp" inputmode="numeric" maxlength="6" placeholder="رمز SMS المكوّن من 6 أرقام">
-      <button id="verifyOtp" class="primary" type="button">تأكيد الرقم</button>
-    </div>
     <div id="authMessage" class="msg"></div>
-    <small class="muted">لن يتم تخزين كلمة المرور داخل LocalStorage؛ Supabase Auth يديرها.</small>
   </div>
 </div>
 <div id="appShell" class="app-shell locked">
