@@ -1,7 +1,5 @@
-const createClient = window.supabase?.createClient;
 const LS="hashem_life_os_v2";
-const CFG="hashem_supabase_config_v1";
-let state=loadState(), sb=null, session=null, authMode="login", currentPage="dashboard", selectedDate=today();
+let state=loadState(), currentPage="dashboard", selectedDate=today();
 
 const $=id=>document.getElementById(id);
 function today(){return new Date().toISOString().slice(0,10)}
@@ -11,7 +9,7 @@ function defaultState(){return{
 }}
 function addDays(date,n){let d=new Date(date+"T12:00:00");d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
 function loadState(){try{return Object.assign(defaultState(),JSON.parse(localStorage.getItem(LS)||"{}"))}catch{return defaultState()}}
-function persist(){localStorage.setItem(LS,JSON.stringify(state)); renderAll(); autoCloud()}
+function persist(){localStorage.setItem(LS,JSON.stringify(state)); renderAll()}
 function todayDay(){return state.days[selectedDate]||{hours:{se:0,en:0,project:0,spec:0,career:0},tasks:{},done:"",missed:"",learned:""}}
 function go(page){currentPage=page;document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(page).classList.add("active");document.querySelectorAll(".nav").forEach(x=>x.classList.toggle("active",x.dataset.page===page));if(page==="daily")renderDaily();if(page==="health")renderHealth();window.scrollTo(0,0)}
 window.go=go;
@@ -23,11 +21,19 @@ const softwareTracks=[
  ["Foundation","Programming Fundamentals","Problem Solving","Data Structures","Algorithms","OOP","Clean Code","SOLID Principles","Design Patterns","Testing & Debugging","Databases / SQL","Operating Systems","Networking / Web Fundamentals","Software Architecture"],
  ["Professional Practice","Git & GitHub","Version Control & Workflow","APIs (REST)","Authentication & Authorization","Security Fundamentals","Testing عمليًا","Docker","CI/CD","Deployment","Cloud Basics","System Design","Documentation","Code Review","Team Workflow (SDLC)","Production Mindset"]
 ];
-const projectNames=["Job Application Tracker","Customer Management","TREAQ (Graduation Project)","Campus Event System","Portfolio","PLUGIX","Qareen"];
+const projectDetails=[
+ {name:"Job Application Tracker",stack:"Backend + Frontend + Database",focus:"تطبيق عملي على CRUD، APIs، authentication، deployment، واختبار دورة العمل كاملة."},
+ {name:"Customer Management",stack:"Next.js 16 + TypeScript + Tailwind + Prisma + PostgreSQL/Supabase",focus:"إدارة العملاء، database design، CRUD، data layer، وتجربة dashboard مرتبة."},
+ {name:"TREAQ — Graduation Project",stack:"C# + ASP.NET MVC + Entity Framework + SQL Server",focus:"مشروع التخرج: نظام إدارة صيدلية يطبق MVC، قواعد البيانات، والـbusiness logic."},
+ {name:"Campus Event System",stack:"Java Servlets + JSP + MySQL + MVC",focus:"إدارة الفعاليات والتذاكر مع تطبيق MVC وdatabase operations."},
+ {name:"Portfolio",stack:"React + TypeScript + Tailwind",focus:"هوية مهنية، عرض المشاريع والمهارات، وتحسين تجربة المستخدم والـUI."},
+ {name:"PLUGIX",stack:"Next.js + TypeScript + Prisma + Database",focus:"منتج عملي قابل للتطوير: Auth، Admin، Store، Cart، Orders، Images، Security وUX."},
+ {name:"Qareen",stack:"Next.js 16 + TypeScript + Tailwind + Prisma + PostgreSQL",focus:"فكرة Digital Twin بتطبيق معماري حديث مع database schema وتجربة منتج."}
+];
 const specAreas=["Backend Development","Frontend Development","Full Stack Development",".NET Development","React / Next.js","Database & Data Engineering","Software Architecture","Cloud & DevOps","Cyber Security","AI / Machine Learning","Mobile Development","UI/UX Development"];
 const careerItems=["CV احترافي","GitHub Profile مرتب","Portfolio قوي","LinkedIn احترافي","توثيق المشاريع","كتابة وصف قوي لكل مشروع","إبراز المهارات والتقنيات","تحديث مستمر"];
 
-function renderAll(){renderDashboard();renderPlan();renderEnglish();renderSoftware();renderProjects();renderSpecialization();renderCareer();renderReports();loadSettings();updateUser();renderDaily();renderHealth()}
+function renderAll(){renderDashboard();renderPlan();renderEnglish();renderSoftware();renderProjects();renderSpecialization();renderCareer();renderReports();loadSettings();renderDaily();renderHealth()}
 function renderDashboard(){
  $("dashDate").textContent=new Date(selectedDate+"T12:00:00").toLocaleDateString("ar-JO",{weekday:"long",day:"numeric",month:"long"});
  const d=todayDay(), total=Object.values(d.hours).reduce((a,b)=>a+b,0);
@@ -61,7 +67,25 @@ $("saveSpeaking").onclick=()=>{if(!$("speakTopic").value)return;state.english.sp
 
 function renderSoftware(){let saved=state.software; $("softwareTracks").innerHTML=softwareTracks.map((track,ti)=>{let done=track.slice(1).filter(x=>saved[x]).length;return `<div class="track"><div class="card-head"><div><b>${ti+1}. ${track[0]}</b><span>${done}/${track.length-1} completed</span></div><span class="badge">${Math.round(done/(track.length-1)*100)}%</span></div>${track.slice(1).map(x=>`<label class="check ${saved[x]?'done':''}"><input type="checkbox" data-soft="${x}" ${saved[x]?'checked':''}>${x}</label>`).join("")}</div>`}).join("");document.querySelectorAll("[data-soft]").forEach(x=>x.onchange=e=>{state.software[e.target.dataset.soft]=e.target.checked;persist();renderSoftware()})}
 
-function renderProjects(){ $("projectsGrid").innerHTML=projectNames.map((p,i)=>{let d=state.projects[p]||{progress:0,status:"Planned",note:""};return `<div class="project"><b>${i+1}. ${p}</b><span>${d.status}</span><div class="bar"><i style="width:${d.progress}%"></i></div><div class="row"><small>${d.progress}%</small><input data-prog="${p}" type="range" min="0" max="100" value="${d.progress}" style="width:75%"></div><input data-note="${p}" placeholder="ماذا تريد تحسينه؟" value="${escapeHtml(d.note||"")}><button class="secondary" data-saveproj="${p}">حفظ</button></div>`}).join("");document.querySelectorAll("[data-saveproj]").forEach(b=>b.onclick=()=>{let p=b.dataset.saveproj;state.projects[p]={progress:+document.querySelector(`[data-prog="${CSS.escape(p)}"]`).value,status:state.projects[p]?.status||"In Progress",note:document.querySelector(`[data-note="${CSS.escape(p)}"]`).value};persist();renderProjects()})}
+function renderProjects(){
+ $("projectsGrid").innerHTML=projectDetails.map((p,i)=>{
+   let d=state.projects[p.name]||{progress:0,status:"Planned",note:""};
+   return `<div class="project">
+     <div class="project-top"><b>${i+1}. ${p.name}</b><span class="badge">${d.status}</span></div>
+     <span class="project-stack">${p.stack}</span>
+     <span class="project-focus">${p.focus}</span>
+     <div class="bar"><i style="width:${d.progress}%"></i></div>
+     <div class="row"><small>${d.progress}%</small><input data-prog="${p.name}" type="range" min="0" max="100" value="${d.progress}" style="width:75%"></div>
+     <input data-note="${p.name}" placeholder="ماذا تريد تحسينه؟" value="${escapeHtml(d.note||"")}">
+     <button class="secondary" data-saveproj="${p.name}">حفظ</button>
+   </div>`
+ }).join("");
+ document.querySelectorAll("[data-saveproj]").forEach(b=>b.onclick=()=>{
+   let p=b.dataset.saveproj;
+   state.projects[p]={progress:+document.querySelector(`[data-prog="${CSS.escape(p)}"]`).value,status:state.projects[p]?.status||"In Progress",note:document.querySelector(`[data-note="${CSS.escape(p)}"]`).value};
+   persist();renderProjects()
+ })
+}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 
 function renderSpecialization(){ $("specAreas").innerHTML=specAreas.map(a=>`<div class="spec-item"><b>${a}</b><span>سجّل تقييمك بعد تجربة فعلية</span><div class="spec-score">${state.specialization.scores[a]||0}/10</div><input data-score="${a}" type="range" min="0" max="10" value="${state.specialization.scores[a]||0}"></div>`).join("");document.querySelectorAll("[data-score]").forEach(x=>x.oninput=e=>{state.specialization.scores[e.target.dataset.score]=+e.target.value;persist()});$("expArea").innerHTML=specAreas.map(x=>`<option>${x}</option>`).join("");$("expHistory").innerHTML=state.specialization.experiments.map(x=>`<div class="table-row"><b>${x.date}</b><span>${x.area} — ${x.task}</span><span>${x.note||""}</span></div>`).join("")||"<div class='empty'>لا توجد تجارب بعد.</div>"}
@@ -76,32 +100,15 @@ function renderReports(){let entries=Object.entries(state.days),hours=entries.re
 function weekKey(){let d=new Date(),one=new Date(d.getFullYear(),0,1);return "w"+Math.ceil((((d-one)/86400000)+one.getDay()+1)/7)}
 $("saveReview").onclick=()=>{state.reviews[weekKey()]={win:$("reviewWin").value,block:$("reviewBlock").value,next:$("reviewNext").value};persist();renderReports()}
 
-function loadSettings(){$("startDate").value=state.settings.start;$("endDate").value=state.settings.end;let cfg=JSON.parse(localStorage.getItem(CFG)||"{}");$("sbUrl").value=cfg.url||"";$("sbKey").value=cfg.key||""}
+function loadSettings(){$("startDate").value=state.settings.start;$("endDate").value=state.settings.end}
 $("saveSettings").onclick=()=>{state.settings.start=$("startDate").value;state.settings.end=$("endDate").value;persist();alert("تم حفظ الفترة")}
 function exportData(){let blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="hashem-life-os-backup-"+today()+".json";a.click()}
 $("exportData").onclick=exportData;
 $("importData").onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{state=JSON.parse(r.result);persist();alert("تم استرجاع النسخة")}catch{alert("الملف غير صالح")}};r.readAsText(f)}
 $("resetData").onclick=()=>{if(confirm("حذف البيانات المحلية؟ احتفظ بنسخة Export أولًا.")){localStorage.removeItem(LS);location.reload()}}
 
-async function connectCloud(){if(!createClient){if($("authConfigMsg"))$("authConfigMsg").textContent="Supabase SDK لم يتم تحميله. حدّث الصفحة أو جرّب بعد انتهاء Netlify Deploy.";return}let url=($("sbUrl")?.value||$("authSbUrl")?.value||"https://lepffckwdmrcckxnnfdx.supabase.co").trim(),key=($("sbKey")?.value||$("authSbKey")?.value||"").trim();if(!url||!key){if($("cloudMsg"))$("cloudMsg").textContent="أدخل URL وPublishable Key";if($("authConfigMsg"))$("authConfigMsg").textContent="أدخل Publishable Key من Supabase → Settings → API";return}localStorage.setItem(CFG,JSON.stringify({url,key}));sb=createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});if($("cloudMsg"))$("cloudMsg").textContent="تم إعداد Cloud. سجّل الدخول أو استخدم Pull/Push.";if($("authConfigMsg"))$("authConfigMsg").textContent="تم حفظ إعداد Cloud ✓"}
-async function initCloud(){let cfg=JSON.parse(localStorage.getItem(CFG)||"null");if(!cfg?.url||!cfg?.key)return;try{sb=createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});let r=await sb.auth.getSession();session=r.data.session||null;sb.auth.onAuthStateChange((_e,s)=>{session=s;updateUser()});updateUser()}catch(e){console.warn(e)}}
-async function signup(){let {data,error}=await sb.auth.signUp({email:$("authEmail").value,password:$("authPassword").value});if(error)throw error;$("authMsg").textContent=data.session?"تم إنشاء الحساب":"تحقق من بريدك الإلكتروني ثم سجّل الدخول."}
-async function login(){let {data,error}=await sb.auth.signInWithPassword({email:$("authEmail").value,password:$("authPassword").value});if(error)throw error;session=data.session;hideAuth();await pullCloud()}
-async function pullCloud(){if(!sb||!session){$("cloudMsg").textContent="لا يوجد Cloud session.";return}let {data,error}=await sb.from("user_dashboard_data").select("payload").eq("user_id",session.user.id).maybeSingle();if(error){$("cloudMsg").textContent=error.message;return}if(data?.payload){state=data.payload;localStorage.setItem(LS,JSON.stringify(state));renderAll();$("cloudMsg").textContent="تم جلب آخر نسخة من Cloud ✓"}else{$("cloudMsg").textContent="لا توجد نسخة Cloud؛ ارفع النسخة المحلية الآن."}}
-async function pushCloud(){if(!sb||!session){$("cloudMsg").textContent="سجّل الدخول أولًا.";return}let {error}=await sb.from("user_dashboard_data").upsert({user_id:session.user.id,payload:state,updated_at:new Date().toISOString()},{onConflict:"user_id"});$("cloudMsg").textContent=error?error.message:"تم رفع البيانات إلى Cloud ✓"}
-let cloudTimer=null;function autoCloud(){if(sb&&session){clearTimeout(cloudTimer);cloudTimer=setTimeout(pushCloud,1200)}}
-function showAuth(){$("authScreen").classList.remove("hidden")}
-function hideAuth(){$("authScreen").classList.add("hidden")}
-function updateUser(){let email=session?.user?.email;$("userName").textContent=email||"Hashem";$("syncStatus").textContent=session?"☁️ Cloud Connected":"💾 Local Mode";if($("signOut"))$("signOut").classList.toggle("hidden",!session)}
-$("connectCloud").onclick=async()=>{await connectCloud();await initCloud();showAuth()}
-$("cloudLogin").onclick=async()=>{await connectCloud();await initCloud();showAuth()}
-window.saveCloudConfig=async function(){const msg=$("authConfigMsg");try{if(!createClient){msg.textContent="Supabase SDK لم يتم تحميله. انتظر Deploy ثم حدّث الصفحة.";return}const url=($("authSbUrl")?.value||"").trim();const key=($("authSbKey")?.value||"").trim();if(!url||!key){msg.textContent="أدخل Publishable Key أولًا.";return}localStorage.setItem(CFG,JSON.stringify({url,key}));sb=createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const result=await sb.auth.getSession();if(result.error)throw result.error;session=result.data.session||null;msg.textContent="تم حفظ إعداد Cloud ✓";updateUser()}catch(e){msg.textContent="خطأ: "+(e?.message||String(e))}};
-$("signOut").onclick=async()=>{if(sb)await sb.auth.signOut();session=null;updateUser();showAuth()}
-$("pullCloud").onclick=pullCloud;$("pushCloud").onclick=pushCloud;
+
 document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>go(x.dataset.page));
 $("menuBtn").onclick=()=>document.querySelector(".sidebar").classList.toggle("open");
-document.querySelectorAll(".tab").forEach(x=>x.onclick=()=>{authMode=x.dataset.auth;document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t===x));$("authSubmit").textContent=authMode==="login"?"دخول":"إنشاء حساب"});
-$("localModeBtn").onclick=hideAuth;
-$("authSubmit").onclick=async()=>{try{if(!sb){await connectCloud()}if(authMode==="login")await login();else await signup()}catch(e){$("authMsg").textContent=e.message||"حدث خطأ"}};
-async function start(){renderAll();await initCloud();if(session){hideAuth();await pullCloud()}else{showAuth()}}
+function start(){renderAll();go("dashboard")}
 start();
