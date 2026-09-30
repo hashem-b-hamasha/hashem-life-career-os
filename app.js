@@ -276,7 +276,8 @@ function scheduleCloudSync(){
   clearTimeout(cloudTimer);
   cloudTimer=setTimeout(function(){pushDatabase(true).catch(function(e){console.warn("Cloud sync:",e)})},1200);
 }
-\ndocument.querySelectorAll(".nav").forEach(x=>x.onclick=()=>go(x.dataset.page));
+
+document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>go(x.dataset.page));
 $("menuBtn").onclick=()=>document.querySelector(".sidebar").classList.toggle("open");
 async function start(){
   renderAll();
