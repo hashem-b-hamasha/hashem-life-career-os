@@ -17,7 +17,7 @@
       <p>Project URL ثابت لهذا المشروع. أضف <b>Publishable Key</b> من Supabase → Settings → API. لا تستخدم Service Role / Secret Key.</p>
       <input id="authSbUrl" type="url" value="https://lepffckwdmrcckxnnfdx.supabase.co" placeholder="Supabase Project URL">
       <input id="authSbKey" type="text" placeholder="sb_publishable_...">
-      <button type="button" class="secondary" id="saveAuthConfig">حفظ إعداد Cloud</button>
+      <button type="button" class="secondary" id="saveAuthConfig" onclick="saveCloudConfig()">حفظ إعداد Cloud</button>
       <div id="authConfigMsg" class="msg"></div>
     </div>
     <div class="tabs"><button class="tab active" data-auth="login">تسجيل الدخول</button><button class="tab" data-auth="signup">إنشاء حساب</button></div>
