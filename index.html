@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111827">
+<title>Hashem — Life & Career OS</title>
+<link rel="manifest" href="manifest.json"><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="authScreen" class="auth-screen hidden">
+  <div class="auth-card">
+    <div class="brand">H<span>•</span>OS</div><h1>Hashem Life & Career OS</h1>
+    <p>سجّل دخولك حتى تقدر تحفظ بياناتك على Cloud، أو استخدم Local Mode بدون حساب.</p>
+    <div class="tabs"><button class="tab active" data-auth="login">تسجيل الدخول</button><button class="tab" data-auth="signup">إنشاء حساب</button></div>
+    <input id="authEmail" type="email" placeholder="Email">
+    <input id="authPassword" type="password" placeholder="Password">
+    <button class="primary" id="authSubmit">دخول</button>
+    <button class="link-btn" id="localModeBtn">الدخول بالوضع المحلي</button>
+    <div id="authMsg" class="msg"></div>
+  </div>
+</div>
+
+<div class="app-shell">
+<aside class="sidebar">
+  <div class="brand">H<span>•</span>OS</div>
+  <div class="user-box"><b id="userName">Hashem</b><small id="syncStatus">Local Mode</small></div>
+  <nav>
+    <button class="nav active" data-page="dashboard">⌂ <span>الرئيسية</span></button>
+    <button class="nav" data-page="daily">✓ <span>سجل اليوم</span></button>
+    <button class="nav" data-page="plan">▦ <span>خطة 8 أسابيع</span></button>
+    <button class="nav" data-page="english">🇬🇧 <span>English</span></button>
+    <button class="nav" data-page="software">💻 <span>Software Engineering</span></button>
+    <button class="nav" data-page="projects">🛠️ <span>Projects</span></button>
+    <button class="nav" data-page="specialization">🧭 <span>Specialization</span></button>
+    <button class="nav" data-page="career">💼 <span>Career</span></button>
+    <button class="nav" data-page="health">🏃 <span>Health</span></button>
+    <button class="nav" data-page="reports">📊 <span>Reports</span></button>
+    <button class="nav" data-page="settings">⚙️ <span>Settings & Backup</span></button>
+  </nav>
+  <div class="sidebar-bottom"><span>8h Development / Day</span><small>Health is outside the 8 hours.</small></div>
+</aside>
+
+<main class="content">
+<header class="mobile-head"><button id="menuBtn">☰</button><b>Hashem OS</b></header>
+
+<section id="dashboard" class="page active">
+  <div class="page-head"><div><span class="eyebrow">THE NEXT 8 WEEKS</span><h1>بناء النسخة الجديدة منك.</h1><p>كل يوم سجّل الحقيقة. لا نبحث عن الكمال؛ نبحث عن الاستمرارية.</p></div><div class="date-card"><span>اليوم</span><b id="dashDate">—</b></div></div>
+  <div class="hero-grid">
+    <div class="hero-card"><span>🇨🇦 Canada Countdown</span><b id="daysLeft">—</b><small>حتى نهاية الفترة المحددة</small></div>
+    <div class="hero-card"><span>⏱️ Today's Development</span><b id="dashHours">0 / 8h</b><small>وقت التطوير فقط</small></div>
+    <div class="hero-card"><span>🔥 Current Streak</span><b id="streak">0 days</b><small>أيام متتالية مسجلة</small></div>
+    <div class="hero-card"><span>🎯 Period Progress</span><b id="periodProgress">0%</b><small>من أهداف الـ8 أسابيع</small></div>
+  </div>
+  <div class="dashboard-grid">
+    <div class="card"><div class="card-head"><div><h2>اليوم</h2><small id="todaySummary">لم تسجل يومك بعد.</small></div><button class="secondary" onclick="go('daily')">فتح السجل</button></div><div id="todayTasks" class="mini-tasks"></div></div>
+    <div class="card"><div class="card-head"><div><h2>توزيع الـ8 ساعات</h2><small>الهدف اليومي</small></div></div><div id="hourBars"></div></div>
+  </div>
+  <div class="card"><div class="card-head"><div><h2>🎯 ماذا نريد بنهاية الفترة؟</h2></div></div><div class="goal-cards">
+    <div><b>💻 Software</b><span>Foundation + Professional Practice</span></div><div><b>🇬🇧 English</b><span>Speaking + Listening + Technical + Interview</span></div><div><b>🛠️ Projects</b><span>تحسين المشاريع الحالية بدون تشتت</span></div><div><b>🧭 Specialization</b><span>اكتشاف الاتجاه بناءً على الأداء</span></div><div><b>💼 Career</b><span>GitHub + Portfolio + CV + LinkedIn</span></div><div><b>🏃 Health</b><span>نظام صحي منفصل عن الـ8 ساعات</span></div>
+  </div></div>
+</section>
+
+<section id="daily" class="page">
+  <div class="page-head"><div><span class="eyebrow">DAILY LOG</span><h1>سجل يومك</h1><p>هذه أهم صفحة: ماذا فعلت فعلًا؟</p></div><input class="date-input" id="dayDate" type="date"></div>
+  <div class="card"><div class="hours-grid">
+    <label>💻 Software Engineering<input id="hSe" type="number" min="0" max="8" step=".25"></label>
+    <label>🇬🇧 English<input id="hEn" type="number" min="0" max="8" step=".25"></label>
+    <label>🛠️ Projects<input id="hProject" type="number" min="0" max="8" step=".25"></label>
+    <label>🧭 Specialization<input id="hSpec" type="number" min="0" max="8" step=".25"></label>
+    <label>💼 Career<input id="hCareer" type="number" min="0" max="8" step=".25"></label>
+  </div><div class="progress-wrap"><div class="row"><span>الـ8 ساعات</span><b id="dailyTotal">0 / 8h</b></div><div class="progress"><i id="dailyProgress"></i></div></div>
+  <div id="dailyChecklist" class="checklist"></div>
+  <div class="three-cols"><label>ماذا أنجزت؟<textarea id="done" placeholder="اكتب الإنجازات الحقيقية..."></textarea></label><label>ماذا لم تنجز؟ ولماذا؟<textarea id="missed" placeholder="بصراحة، بدون جلد ذات..."></textarea></label><label>ماذا تعلمت؟<textarea id="learned" placeholder="معلومة، خطأ، قرار، فكرة..."></textarea></label></div>
+  <button class="primary" id="saveDay">حفظ اليوم</button><span id="saveMsg" class="save-msg"></span></div>
+  <div class="card"><div class="card-head"><h2>آخر الأيام</h2></div><div id="recentDays" class="table-list"></div></div>
+</section>
+
+<section id="plan" class="page">
+ <div class="page-head"><div><span class="eyebrow">8-WEEK PLAN</span><h1>خطة الشهرين</h1><p>الخطة تتحول إلى مهام قابلة للإنجاز، وليست مجرد قائمة.</p></div></div>
+ <div id="weeks" class="weeks"></div>
+</section>
+
+<section id="english" class="page">
+ <div class="page-head"><div><span class="eyebrow">ENGLISH FOR SOFTWARE ENGINEERS</span><h1>English 🇬🇧</h1><p>مسار أساسي: الدراسة، الحياة، المقابلات والعمل في كندا.</p></div></div>
+ <div class="metric-grid" id="englishMetrics"></div>
+ <div class="card"><div class="card-head"><h2>المهارات</h2><small>علّم ما أنجزته</small></div><div id="englishModules" class="module-grid"></div></div>
+ <div class="card"><h2>Speaking Log</h2><div class="three-cols"><label>موضوع تحدثت عنه<input id="speakTopic"></label><label>الدقائق<input id="speakMinutes" type="number"></label><label>ملاحظات<input id="speakNotes"></label></div><button class="primary" id="saveSpeaking">إضافة Speaking Session</button><div id="speakingHistory" class="table-list"></div></div>
+</section>
+
+<section id="software" class="page">
+ <div class="page-head"><div><span class="eyebrow">SOFTWARE ENGINEERING</span><h1>Software Engineering</h1><p>مساران: Foundation ثم Professional Practice.</p></div></div>
+ <div id="softwareTracks" class="track-grid"></div>
+</section>
+
+<section id="projects" class="page">
+ <div class="page-head"><div><span class="eyebrow">CURRENT PROJECTS</span><h1>المشاريع</h1><p>لا نحذفها ولا نفتح مشاريع عشوائية. نستخدمها كمختبر عملي.</p></div></div>
+ <div id="projectsGrid" class="project-grid"></div>
+</section>
+
+<section id="specialization" class="page">
+ <div class="page-head"><div><span class="eyebrow">DISCOVERY</span><h1>اكتشاف التخصص 🧭</h1><p>لا نقرر التخصص الآن. نسجل التجارب والأداء ثم نحلل.</p></div></div>
+ <div id="specAreas" class="spec-grid"></div>
+ <div class="card"><h2>تجربة تخصص</h2><div class="three-cols"><label>المجال<select id="expArea"></select></label><label>ماذا جربت؟<input id="expTask"></label><label>ملاحظتك<input id="expNote"></label></div><button class="primary" id="saveExp">حفظ التجربة</button><div id="expHistory" class="table-list"></div></div>
+</section>
+
+<section id="career" class="page">
+ <div class="page-head"><div><span class="eyebrow">CAREER</span><h1>Career & Personal Branding</h1><p>نرتب الهوية المهنية بعد أن يتضح الاتجاه.</p></div></div>
+ <div id="careerItems" class="career-list"></div>
+</section>
+
+<section id="health" class="page">
+ <div class="page-head"><div><span class="eyebrow">HEALTH — OUTSIDE 8 HOURS</span><h1>الصحة 🏃</h1><p>الصحة مهمة، لكنها لا تخصم من ساعات التطوير.</p></div></div>
+ <div class="metric-grid"><div class="metric"><span>آخر وزن</span><b id="lastWeight">—</b></div><div class="metric"><span>متوسط النوم</span><b id="avgSleep">—</b></div><div class="metric"><span>أيام تمرين</span><b id="workoutDays">0</b></div></div>
+ <div class="card"><h2>تسجيل الصحة لليوم المحدد</h2><div class="four-cols"><label>الوزن kg<input id="healthWeight" type="number" step=".1"></label><label>النوم hours<input id="healthSleep" type="number" step=".1"></label><label class="switch"><input id="healthWorkout" type="checkbox"> تمرين</label><label class="switch"><input id="healthWater" type="checkbox"> ماء كفاية</label></div><button class="primary" id="saveHealth">حفظ</button></div>
+</section>
+
+<section id="reports" class="page">
+ <div class="page-head"><div><span class="eyebrow">WEEKLY REVIEW</span><h1>التقارير 📊</h1><p>نراجع الأداء بدل ما نحكم على أنفسنا من يوم واحد.</p></div></div>
+ <div id="reportMetrics" class="metric-grid"></div>
+ <div class="card"><div class="card-head"><h2>آخر 7 أيام</h2></div><div id="weeklyBars"></div></div>
+ <div class="card"><h2>Weekly Review</h2><div class="three-cols"><label>ما الذي نجح؟<textarea id="reviewWin"></textarea></label><label>ما الذي عطلني؟<textarea id="reviewBlock"></textarea></label><label>ما أهم تعديل للأسبوع القادم؟<textarea id="reviewNext"></textarea></label></div><button class="primary" id="saveReview">حفظ المراجعة</button></div>
+</section>
+
+<section id="settings" class="page">
+ <div class="page-head"><div><span class="eyebrow">SETTINGS & BACKUP</span><h1>الإعدادات والنسخ الاحتياطي</h1><p>Local-first + Cloud Sync. لا تعتمد على نسخة واحدة.</p></div></div>
+ <div class="card"><h2>الفترة</h2><div class="two-cols"><label>البداية<input id="startDate" type="date"></label><label>النهاية<input id="endDate" type="date"></label></div><button class="primary" id="saveSettings">حفظ الفترة</button></div>
+ <div class="card"><h2>☁️ Cloud Sync — Supabase</h2><p class="muted">أدخل Project URL وPublishable Key. لا تضع Service Role Key في الموقع.</p><div class="two-cols"><label>Supabase URL<input id="sbUrl" placeholder="https://xxxx.supabase.co"></label><label>Publishable Key<input id="sbKey" placeholder="sb_publishable_..."></label></div><button class="primary" id="connectCloud">حفظ وربط Cloud</button><button class="secondary" id="cloudLogin">تسجيل الدخول إلى Cloud</button><button class="secondary" id="pullCloud">جلب البيانات من Cloud</button><button class="secondary" id="pushCloud">رفع البيانات إلى Cloud</button><div id="cloudMsg" class="msg"></div></div>
+ <div class="card"><h2>💾 Backup</h2><p class="muted">حتى مع Cloud، احتفظ بنسخة JSON دورية.</p><button class="primary" id="exportData">Export JSON</button><label class="file-upload">Import JSON<input id="importData" type="file" accept=".json"></label><button class="danger" id="resetData">حذف البيانات المحلية</button></div>
+ <div class="card"><h2>📌 SQL Setup</h2><p class="muted">ملف <code>supabase.sql</code> الموجود في المشروع ينشئ الجدول وRLS والسياسات اللازمة.</p></div>
+</section>
+</main></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+</body></html>

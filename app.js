@@ -1,0 +1,106 @@
+const { createClient } = window.supabase;
+const LS="hashem_life_os_v2";
+const CFG="hashem_supabase_config_v1";
+let state=loadState(), sb=null, session=null, authMode="login", currentPage="dashboard", selectedDate=today();
+
+const $=id=>document.getElementById(id);
+function today(){return new Date().toISOString().slice(0,10)}
+function defaultState(){return{
+ settings:{start:today(),end:addDays(today,56)},
+ days:{}, plan:{}, english:{modules:{},speaking:[]}, software:{}, projects:{}, specialization:{experiments:[],scores:{}}, career:{}, reviews:{}, health:{}
+}}
+function addDays(date,n){let d=new Date(date+"T12:00:00");d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
+function loadState(){try{return Object.assign(defaultState(),JSON.parse(localStorage.getItem(LS)||"{}"))}catch{return defaultState()}}
+function persist(){localStorage.setItem(LS,JSON.stringify(state)); renderAll(); autoCloud()}
+function todayDay(){return state.days[selectedDate]||{hours:{se:0,en:0,project:0,spec:0,career:0},tasks:{},done:"",missed:"",learned:""}}
+function go(page){currentPage=page;document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(page).classList.add("active");document.querySelectorAll(".nav").forEach(x=>x.classList.toggle("active",x.dataset.page===page));if(page==="daily")renderDaily();if(page==="health")renderHealth();window.scrollTo(0,0)}
+window.go=go;
+
+const englishModules=[
+ ["foundation","General English Foundation"],["listening","Listening"],["speaking","Speaking"],["reading","Reading"],["writing","Writing"],["technical","Technical English"],["communication","Professional Communication"],["interview","Job Interview English"],["ielts","IELTS / Canada Preparation"]
+];
+const softwareTracks=[
+ ["Foundation","Programming Fundamentals","Problem Solving","Data Structures","Algorithms","OOP","Clean Code","SOLID Principles","Design Patterns","Testing & Debugging","Databases / SQL","Operating Systems","Networking / Web Fundamentals","Software Architecture"],
+ ["Professional Practice","Git & GitHub","Version Control & Workflow","APIs (REST)","Authentication & Authorization","Security Fundamentals","Testing عمليًا","Docker","CI/CD","Deployment","Cloud Basics","System Design","Documentation","Code Review","Team Workflow (SDLC)","Production Mindset"]
+];
+const projectNames=["Job Application Tracker","Customer Management","TREAQ (Graduation Project)","Campus Event System","Portfolio","PLUGIX","Qareen"];
+const specAreas=["Backend Development","Frontend Development","Full Stack Development",".NET Development","React / Next.js","Database & Data Engineering","Software Architecture","Cloud & DevOps","Cyber Security","AI / Machine Learning","Mobile Development","UI/UX Development"];
+const careerItems=["CV احترافي","GitHub Profile مرتب","Portfolio قوي","LinkedIn احترافي","توثيق المشاريع","كتابة وصف قوي لكل مشروع","إبراز المهارات والتقنيات","تحديث مستمر"];
+
+function renderAll(){renderDashboard();renderPlan();renderEnglish();renderSoftware();renderProjects();renderSpecialization();renderCareer();renderReports();loadSettings();updateUser();renderDaily();renderHealth()}
+function renderDashboard(){
+ $("dashDate").textContent=new Date(selectedDate+"T12:00:00").toLocaleDateString("ar-JO",{weekday:"long",day:"numeric",month:"long"});
+ const d=todayDay(), total=Object.values(d.hours).reduce((a,b)=>a+b,0);
+ $("dashHours").textContent=`${total} / 8h`; $("todaySummary").textContent=d.done||"لم تسجل يومك بعد.";
+ const end=new Date(state.settings.end+"T23:59:59");$("daysLeft").textContent=Math.max(0,Math.ceil((end-new Date())/86400000));
+ $("streak").textContent=calcStreak()+" days";
+ const planDone=Object.values(state.plan).filter(Boolean).length, planTotal=56*5; $("periodProgress").textContent=Math.round(planDone/planTotal*100)+"%";
+ $("todayTasks").innerHTML=["se","en","project","spec","career"].map((k,i)=>{let labels=["Software Engineering","English","Projects","Specialization","Career"];return `<div class="mini-task ${d.tasks[k]?'done':''}">${d.tasks[k]?'✓':'○'} ${labels[i]}</div>`}).join("");
+ const labels=[["💻 Software",d.hours.se,3],["🇬🇧 English",d.hours.en,2],["🛠️ Projects",d.hours.project,1.5],["🧭 Specialization",d.hours.spec,1],["💼 Career",d.hours.career,.5]];
+ $("hourBars").innerHTML=labels.map(x=>`<div class="hour-row"><span>${x[0]}</span><div class="bar"><i style="width:${Math.min(100,x[1]/x[2]*100)}%"></i></div><b>${x[1]}/${x[2]}</b></div>`).join("");
+}
+function calcStreak(){let n=0,d=new Date();for(let i=0;i<60;i++){let k=d.toISOString().slice(0,10);if(state.days[k])n++;else if(i>0)break;d.setDate(d.getDate()-1)}return n}
+function renderDaily(){
+ $("dayDate").value=selectedDate;let d=todayDay();
+ ["hSe","hEn","hProject","hSpec","hCareer"].forEach((id,i)=>$(id).value=Object.values(d.hours)[i]||"");
+ const total=Object.values(d.hours).reduce((a,b)=>a+b,0);$("dailyTotal").textContent=`${total} / 8h`;$("dailyProgress").style.width=Math.min(100,total/8*100)+"%";
+ $("done").value=d.done||"";$("missed").value=d.missed||"";$("learned").value=d.learned||"";
+ const labels=[["se","💻 Software Engineering — 3h"],["en","🇬🇧 English — 2h"],["project","🛠️ Projects — 1.5h"],["spec","🧭 Specialization — 1h"],["career","💼 Career — 0.5h"]];
+ $("dailyChecklist").innerHTML=labels.map(x=>`<label class="check ${d.tasks[x[0]]?'done':''}"><input type="checkbox" data-dtask="${x[0]}" ${d.tasks[x[0]]?'checked':''}>${x[1]}</label>`).join("");
+ document.querySelectorAll("[data-dtask]").forEach(c=>c.onchange=e=>{let x=todayDay();x.tasks[e.target.dataset.dtask]=e.target.checked;state.days[selectedDate]=x;persist();renderDaily()});
+ const entries=Object.entries(state.days).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,12);
+ $("recentDays").innerHTML=entries.length?entries.map(([date,x])=>{let t=Object.values(x.hours).reduce((a,b)=>a+b,0);return `<div class="table-row"><b>${date}</b><span>${x.done?x.done.slice(0,80):"—"}</span><span class="badge ${t>=8?'good':''}">${t}h / 8h</span></div>`}).join(""):"<div class='empty'>لا يوجد سجل بعد.</div>";
+}
+["hSe","hEn","hProject","hSpec","hCareer"].forEach(id=>$(id).oninput=()=>{let x=todayDay();x.hours={se:+$("hSe").value||0,en:+$("hEn").value||0,project:+$("hProject").value||0,spec:+$("hSpec").value||0,career:+$("hCareer").value||0};let t=Object.values(x.hours).reduce((a,b)=>a+b,0);$("dailyTotal").textContent=`${t} / 8h`;$("dailyProgress").style.width=Math.min(100,t/8*100)+"%"});
+$("dayDate").onchange=e=>{selectedDate=e.target.value;renderDaily()}
+$("saveDay").onclick=()=>{let x=todayDay();x.hours={se:+$("hSe").value||0,en:+$("hEn").value||0,project:+$("hProject").value||0,spec:+$("hSpec").value||0,career:+$("hCareer").value||0};x.done=$("done").value;x.missed=$("missed").value;x.learned=$("learned").value;state.days[selectedDate]=x;persist();$("saveMsg").textContent="تم الحفظ ✓";setTimeout(()=>$("saveMsg").textContent="",2000)}
+
+function renderPlan(){let arr=[];for(let w=1;w<=8;w++){let tasks=["Software Engineering","English","Projects","Specialization","Health","Weekly Review"];arr.push(`<div class="week"><div class="week-head"><h2>الأسبوع ${w}</h2><span class="badge">${Object.keys(state.plan).filter(k=>k.startsWith(w+"-")&&state.plan[k]).length}/${tasks.length}</span></div><div class="week-tasks">${tasks.map((t,i)=>{let k=w+"-"+i;return `<label class="week-task ${state.plan[k]?'done':''}"><input type="checkbox" data-plan="${k}" ${state.plan[k]?'checked':''}>${t}</label>`}).join("")}</div></div>`)}$("weeks").innerHTML=arr.join("");document.querySelectorAll("[data-plan]").forEach(x=>x.onchange=e=>{state.plan[e.target.dataset.plan]=e.target.checked;persist()})}
+
+function renderEnglish(){let done=Object.values(state.english.modules).filter(Boolean).length;$("englishMetrics").innerHTML=[["Modules Completed",done+"/9"],["Speaking Sessions",state.english.speaking.length],["Speaking Minutes",state.english.speaking.reduce((a,b)=>a+(+b.minutes||0),0)],["Goal","Work + Study + Life"]].map(x=>`<div class="metric"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");$("englishModules").innerHTML=englishModules.map(x=>`<label class="module"><input type="checkbox" data-en="${x[0]}" ${state.english.modules[x[0]]?'checked':''}><b>${x[1]}</b><span>${state.english.modules[x[0]]?'Completed':'In progress'}</span></label>`).join("");document.querySelectorAll("[data-en]").forEach(x=>x.onchange=e=>{state.english.modules[e.target.dataset.en]=e.target.checked;persist();renderEnglish()});$("speakingHistory").innerHTML=state.english.speaking.map(x=>`<div class="table-row"><b>${x.date}</b><span>${x.topic}</span><span class="badge">${x.minutes} min</span></div>`).join("")||"<div class='empty'>لا توجد جلسات بعد.</div>"}
+$("saveSpeaking").onclick=()=>{if(!$("speakTopic").value)return;state.english.speaking.unshift({date:today(),topic:$("speakTopic").value,minutes:+$("speakMinutes").value||0,notes:$("speakNotes").value});$("speakTopic").value="";$("speakMinutes").value="";$("speakNotes").value="";persist();renderEnglish()}
+
+function renderSoftware(){let saved=state.software; $("softwareTracks").innerHTML=softwareTracks.map((track,ti)=>{let done=track.slice(1).filter(x=>saved[x]).length;return `<div class="track"><div class="card-head"><div><b>${ti+1}. ${track[0]}</b><span>${done}/${track.length-1} completed</span></div><span class="badge">${Math.round(done/(track.length-1)*100)}%</span></div>${track.slice(1).map(x=>`<label class="check ${saved[x]?'done':''}"><input type="checkbox" data-soft="${x}" ${saved[x]?'checked':''}>${x}</label>`).join("")}</div>`}).join("");document.querySelectorAll("[data-soft]").forEach(x=>x.onchange=e=>{state.software[e.target.dataset.soft]=e.target.checked;persist();renderSoftware()})}
+
+function renderProjects(){ $("projectsGrid").innerHTML=projectNames.map((p,i)=>{let d=state.projects[p]||{progress:0,status:"Planned",note:""};return `<div class="project"><b>${i+1}. ${p}</b><span>${d.status}</span><div class="bar"><i style="width:${d.progress}%"></i></div><div class="row"><small>${d.progress}%</small><input data-prog="${p}" type="range" min="0" max="100" value="${d.progress}" style="width:75%"></div><input data-note="${p}" placeholder="ماذا تريد تحسينه؟" value="${escapeHtml(d.note||"")}><button class="secondary" data-saveproj="${p}">حفظ</button></div>`}).join("");document.querySelectorAll("[data-saveproj]").forEach(b=>b.onclick=()=>{let p=b.dataset.saveproj;state.projects[p]={progress:+document.querySelector(`[data-prog="${CSS.escape(p)}"]`).value,status:state.projects[p]?.status||"In Progress",note:document.querySelector(`[data-note="${CSS.escape(p)}"]`).value};persist();renderProjects()})}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+function renderSpecialization(){ $("specAreas").innerHTML=specAreas.map(a=>`<div class="spec-item"><b>${a}</b><span>سجّل تقييمك بعد تجربة فعلية</span><div class="spec-score">${state.specialization.scores[a]||0}/10</div><input data-score="${a}" type="range" min="0" max="10" value="${state.specialization.scores[a]||0}"></div>`).join("");document.querySelectorAll("[data-score]").forEach(x=>x.oninput=e=>{state.specialization.scores[e.target.dataset.score]=+e.target.value;persist()});$("expArea").innerHTML=specAreas.map(x=>`<option>${x}</option>`).join("");$("expHistory").innerHTML=state.specialization.experiments.map(x=>`<div class="table-row"><b>${x.date}</b><span>${x.area} — ${x.task}</span><span>${x.note||""}</span></div>`).join("")||"<div class='empty'>لا توجد تجارب بعد.</div>"}
+$("saveExp").onclick=()=>{state.specialization.experiments.unshift({date:today(),area:$("expArea").value,task:$("expTask").value,note:$("expNote").value});$("expTask").value="";$("expNote").value="";persist();renderSpecialization()}
+
+function renderCareer(){$("careerItems").innerHTML=careerItems.map(x=>`<label class="career-item"><div><b>${x}</b><span>${state.career[x]?'Completed':'Not completed'}</span></div><input data-career="${x}" type="checkbox" ${state.career[x]?'checked':''}></label>`).join("");document.querySelectorAll("[data-career]").forEach(x=>x.onchange=e=>{state.career[e.target.dataset.career]=e.target.checked;persist()})}
+
+function renderHealth(){let d=state.health[selectedDate]||{};$("healthWeight").value=d.weight||"";$("healthSleep").value=d.sleep||"";$("healthWorkout").checked=!!d.workout;$("healthWater").checked=!!d.water;let vals=Object.values(state.health);$("lastWeight").textContent=vals.length?vals[vals.length-1].weight+" kg":"—";let sleeps=vals.filter(x=>x.sleep).map(x=>+x.sleep);$("avgSleep").textContent=sleeps.length?(sleeps.reduce((a,b)=>a+b,0)/sleeps.length).toFixed(1)+"h":"—";$("workoutDays").textContent=vals.filter(x=>x.workout).length}
+$("saveHealth").onclick=()=>{state.health[selectedDate]={weight:$("healthWeight").value,sleep:$("healthSleep").value,workout:$("healthWorkout").checked,water:$("healthWater").checked};persist();renderHealth()}
+
+function renderReports(){let entries=Object.entries(state.days),hours=entries.reduce((s,[,d])=>s+Object.values(d.hours).reduce((a,b)=>a+b,0),0);let avg=entries.length?hours/entries.length:0;$("reportMetrics").innerHTML=[["Days Logged",entries.length],["Total Hours",hours.toFixed(1)+"h"],["Average / Day",avg.toFixed(1)+"h"],["8h Days",entries.filter(([,d])=>Object.values(d.hours).reduce((a,b)=>a+b,0)>=8).length]].map(x=>`<div class="metric"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");let rows=[];for(let i=6;i>=0;i--){let date=addDays(today(),-i),d=state.days[date],h=d?Object.values(d.hours).reduce((a,b)=>a+b,0):0;rows.push(`<div class="hour-row"><span>${date}</span><div class="bar"><i style="width:${Math.min(100,h/8*100)}%"></i></div><b>${h}h</b></div>`)}$("weeklyBars").innerHTML=rows.join("");let r=state.reviews[weekKey()]||{};$("reviewWin").value=r.win||"";$("reviewBlock").value=r.block||"";$("reviewNext").value=r.next||""}
+function weekKey(){let d=new Date(),one=new Date(d.getFullYear(),0,1);return "w"+Math.ceil((((d-one)/86400000)+one.getDay()+1)/7)}
+$("saveReview").onclick=()=>{state.reviews[weekKey()]={win:$("reviewWin").value,block:$("reviewBlock").value,next:$("reviewNext").value};persist();renderReports()}
+
+function loadSettings(){$("startDate").value=state.settings.start;$("endDate").value=state.settings.end;let cfg=JSON.parse(localStorage.getItem(CFG)||"{}");$("sbUrl").value=cfg.url||"";$("sbKey").value=cfg.key||""}
+$("saveSettings").onclick=()=>{state.settings.start=$("startDate").value;state.settings.end=$("endDate").value;persist();alert("تم حفظ الفترة")}
+function exportData(){let blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="hashem-life-os-backup-"+today()+".json";a.click()}
+$("exportData").onclick=exportData;
+$("importData").onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{state=JSON.parse(r.result);persist();alert("تم استرجاع النسخة")}catch{alert("الملف غير صالح")}};r.readAsText(f)}
+$("resetData").onclick=()=>{if(confirm("حذف البيانات المحلية؟ احتفظ بنسخة Export أولًا.")){localStorage.removeItem(LS);location.reload()}}
+
+async function connectCloud(){let url=$("sbUrl").value.trim(),key=$("sbKey").value.trim();if(!url||!key){$("cloudMsg").textContent="أدخل URL وPublishable Key";return}localStorage.setItem(CFG,JSON.stringify({url,key}));sb=createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});$("cloudMsg").textContent="تم إعداد Cloud. سجّل الدخول أو استخدم Pull/Push."}
+async function initCloud(){let cfg=JSON.parse(localStorage.getItem(CFG)||"null");if(!cfg?.url||!cfg?.key)return;try{sb=createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});let r=await sb.auth.getSession();session=r.data.session||null;sb.auth.onAuthStateChange((_e,s)=>{session=s;updateUser()});updateUser()}catch(e){console.warn(e)}}
+async function signup(){let {data,error}=await sb.auth.signUp({email:$("authEmail").value,password:$("authPassword").value});if(error)throw error;$("authMsg").textContent=data.session?"تم إنشاء الحساب":"تحقق من بريدك الإلكتروني ثم سجّل الدخول."}
+async function login(){let {data,error}=await sb.auth.signInWithPassword({email:$("authEmail").value,password:$("authPassword").value});if(error)throw error;session=data.session;hideAuth();await pullCloud()}
+async function pullCloud(){if(!sb||!session){$("cloudMsg").textContent="لا يوجد Cloud session.";return}let {data,error}=await sb.from("user_dashboard_data").select("payload").eq("user_id",session.user.id).maybeSingle();if(error){$("cloudMsg").textContent=error.message;return}if(data?.payload){state=data.payload;localStorage.setItem(LS,JSON.stringify(state));renderAll();$("cloudMsg").textContent="تم جلب آخر نسخة من Cloud ✓"}else{$("cloudMsg").textContent="لا توجد نسخة Cloud؛ ارفع النسخة المحلية الآن."}}
+async function pushCloud(){if(!sb||!session){$("cloudMsg").textContent="سجّل الدخول أولًا.";return}let {error}=await sb.from("user_dashboard_data").upsert({user_id:session.user.id,payload:state,updated_at:new Date().toISOString()},{onConflict:"user_id"});$("cloudMsg").textContent=error?error.message:"تم رفع البيانات إلى Cloud ✓"}
+let cloudTimer=null;function autoCloud(){if(sb&&session){clearTimeout(cloudTimer);cloudTimer=setTimeout(pushCloud,1200)}}
+function showAuth(){$("authScreen").classList.remove("hidden")}
+function hideAuth(){$("authScreen").classList.add("hidden")}
+function updateUser(){let email=session?.user?.email;$("userName").textContent=email||"Hashem";$("syncStatus").textContent=session?"☁️ Cloud Connected":"💾 Local Mode"}
+$("connectCloud").onclick=async()=>{await connectCloud();await initCloud();showAuth()}
+$("cloudLogin").onclick=async()=>{await initCloud();showAuth()}
+$("pullCloud").onclick=pullCloud;$("pushCloud").onclick=pushCloud;
+document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>go(x.dataset.page));
+$("menuBtn").onclick=()=>document.querySelector(".sidebar").classList.toggle("open");
+document.querySelectorAll(".tab").forEach(x=>x.onclick=()=>{authMode=x.dataset.auth;document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t===x));$("authSubmit").textContent=authMode==="login"?"دخول":"إنشاء حساب"});
+$("localModeBtn").onclick=hideAuth;
+$("authSubmit").onclick=async()=>{try{if(!sb){await connectCloud()}if(authMode==="login")await login();else await signup()}catch(e){$("authMsg").textContent=e.message||"حدث خطأ"}};
+async function start(){renderAll();await initCloud();if(sb&&!session){/* stay local until user chooses login */} }
+start();
