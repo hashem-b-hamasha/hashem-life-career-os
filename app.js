@@ -95,7 +95,7 @@ function hideAuth(){$("authScreen").classList.add("hidden")}
 function updateUser(){let email=session?.user?.email;$("userName").textContent=email||"Hashem";$("syncStatus").textContent=session?"☁️ Cloud Connected":"💾 Local Mode";if($("signOut"))$("signOut").classList.toggle("hidden",!session)}
 $("connectCloud").onclick=async()=>{await connectCloud();await initCloud();showAuth()}
 $("cloudLogin").onclick=async()=>{await connectCloud();await initCloud();showAuth()}
-$("saveAuthConfig").onclick=async()=>{await connectCloud();await initCloud()}
+window.saveCloudConfig=async function(){try{const url=($("authSbUrl")?.value||"").trim(),key=($("authSbKey")?.value||"").trim();if(!url||!key){$("authConfigMsg").textContent="أدخل Publishable Key أولًا.";return}localStorage.setItem(CFG,JSON.stringify({url,key}));sb=createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const r=await sb.auth.getSession();session=r.data.session||null;$("authConfigMsg").textContent="تم حفظ إعداد Cloud ✓";updateUser()}catch(e){$("authConfigMsg").textContent="خطأ: "+(e.message||"تعذر حفظ الإعداد")}};$("saveAuthConfig").addEventListener("click",window.saveCloudConfig);
 $("signOut").onclick=async()=>{if(sb)await sb.auth.signOut();session=null;updateUser();showAuth()}
 $("pullCloud").onclick=pullCloud;$("pushCloud").onclick=pushCloud;
 document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>go(x.dataset.page));
