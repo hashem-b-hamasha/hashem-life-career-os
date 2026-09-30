@@ -207,7 +207,14 @@ function saveCloudKey(){
   if(key)localStorage.setItem(CLOUD_CFG,JSON.stringify({url:"https://lepffckwdmrcckxnnfdx.supabase.co",key:key}));
 }
 function loadCloudConfig(){
-  const cfg=JSON.parse(localStorage.getItem(CLOUD_CFG)||"null");
+  let cfg=JSON.parse(localStorage.getItem(CLOUD_CFG)||"null");
+  if(!cfg?.key){
+    const oldCfg=JSON.parse(localStorage.getItem("hashem_supabase_config_v1")||"null");
+    if(oldCfg?.key){
+      cfg={url:"https://lepffckwdmrcckxnnfdx.supabase.co",key:oldCfg.key};
+      localStorage.setItem(CLOUD_CFG,JSON.stringify(cfg));
+    }
+  }
   if(cfg?.key && $("cloudKey"))$("cloudKey").value=cfg.key;
 }
 async function connectDatabase(){
