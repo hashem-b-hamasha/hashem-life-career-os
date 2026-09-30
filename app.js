@@ -246,27 +246,16 @@ function loadCloudConfig(){let cfg=JSON.parse(localStorage.getItem(CLOUD_CFG)||"
 function initSupabase(){if(!window.supabase?.createClient)throw new Error("Supabase SDK لم تُحمّل. حدّث الصفحة.");const cfg=loadCloudConfig();if(!cfg?.key)throw new Error("أدخل Publishable Key أولًا.");supabaseClient=window.supabase.createClient(SUPABASE_URL,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});return supabaseClient}
 function showApp(){ $("authGate")?.classList.add("hidden");$("appShell")?.classList.remove("locked");renderAll();go("dashboard");}
 function showAuth(){ $("authGate")?.classList.remove("hidden");$("appShell")?.classList.add("locked");}
-function normalizePhone(v){let p=String(v||"").trim().replace(/[\s()-]/g,"");if(!p.startsWith("+"))p="+"+p;return p}
-function setAuthMode(mode){window.authMode=mode;const login=mode==="login";$("loginTab").classList.toggle("active",login);$("signupTab").classList.toggle("active",!login);$("authPassword2").style.display=login?"none":"block";$("authSubmit").textContent=login?"دخول":"إنشاء الحساب";$("authPassword").autocomplete=login?"current-password":"new-password";authMessage("")}
-async function pushDatabase(silent){
-  if(!supabaseClient||!cloudUser){if(!silent)cloudMessage("لا يوجد حساب متصل.",false);return}
-  const result=await supabaseClient.from("user_dashboard_data").upsert({user_id:cloudUser.id,payload:state,updated_at:new Date().toISOString()},{onConflict:"user_id"});
-  if(result.error)throw result.error;
-  if(!silent)cloudMessage("تمت المزامنة ✓",true);
-}
-async function pullDatabase(){
-  if(!supabaseClient||!cloudUser)return;
-  const result=await supabaseClient.from("user_dashboard_data").select("payload").eq("user_id",cloudUser.id).maybeSingle();
-  if(result.error)throw result.error;
-  if(result.data?.payload){state=mergeDeep(defaultState(),result.data.payload);localStorage.setItem(LS,JSON.stringify(state));renderAll();cloudMessage("تم جلب بيانات حسابك ✓",true)}
-  else{await pushDatabase(true);cloudMessage("تم إنشاء مساحة بيانات حسابك ✓",true)}
-}
-function scheduleCloudSync(){if(!supabaseClient||!cloudUser)return;clearTimeout(cloudTimer);cloudTimer=setTimeout(()=>pushDatabase(true).catch(e=>console.warn("Cloud sync:",e)),900)}
-async function afterAuth(user){
-  cloudUser=user;
-  showApp();
-  try{await pullDatabase()}catch(e){setCloudStatus("Cloud Error",false);console.warn(e)}
-  if($("accountStatus"))$("accountStatus").textContent=user?.phone?"متصل: "+user.phone:"حساب متصل";if($("userName"))$("userName").textContent=state.profile.name||"Hashem";if($("userAccountStatus"))$("userAccountStatus").textContent=user?.phone?"Cloud · "+user.phone:"Cloud Account";
+const FIXED_PASSWORD="2003";
+function unlockApp(){
+  const value=$("authPassword")?.value||"";
+  if(value===FIXED_PASSWORD){
+    localStorage.setItem("hashem_life_os_unlocked","1");
+    showApp();
+    $("authMessage").textContent="";
+  }else{
+    authMessage("الرقم السري غير صحيح.");
+  }
 }
 async function submitAuth(){
   try{
@@ -323,13 +312,10 @@ $("verifyOtp").onclick=verifyPhoneOtp;
 $("signOut").onclick=signOut;
 
 async function start(){
-  renderAll();loadCloudConfig();setAuthMode("login");
-  try{
-    initSupabase();
-    const session=(await supabaseClient.auth.getSession()).data.session;
-    if(session?.user){await afterAuth(session.user);setCloudStatus("Cloud Connected",true)}
-    else showAuth();
-    supabaseClient.auth.onAuthStateChange(async(_event,session)=>{if(session?.user){cloudUser=session.user;showApp()}else{cloudUser=null;showAuth()}});
-  }catch(e){showAuth();authMessage("قبل الدخول: أدخل Publishable Key من Supabase.");console.warn(e)}
+  renderAll();
+  const unlocked=localStorage.getItem("hashem_life_os_unlocked")==="1";
+  if(unlocked) showApp(); else showAuth();
+  $("authSubmit").onclick=unlockApp;
+  $("authPassword").onkeydown=e=>{if(e.key==="Enter")unlockApp()};
 }
 start();
