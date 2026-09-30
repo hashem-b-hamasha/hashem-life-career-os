@@ -28,6 +28,19 @@ function defaultState(){return{
  },
  specialization:{experiments:[],scores:{}},
  career:{},
+ cv:{},
+ learning:{
+   method:"Learn → Understand → Practice → Build → Explain → Review → Repeat",
+   rules:[
+     "ابدأ بالمفهوم قبل الـframework.",
+     "بعد كل درس اكتب الفكرة بكلماتك بدون نسخ.",
+     "طبّق مثالًا صغيرًا من الصفر.",
+     "حل تمرينًا أو مشكلة بدون مشاهدة الحل.",
+     "اربط المفهوم بمشروع حقيقي.",
+     "اشرح ما تعلمته بصوتك كأنك في مقابلة.",
+     "في نهاية اليوم سجّل: ماذا تعلمت؟ ماذا أخطأت؟ ماذا ستراجع؟"
+   ]
+ },
  reviews:{},
  health:{}
 }}
@@ -67,6 +80,21 @@ const projectDetails=[
 ];
 const specAreas=["Backend Development","Frontend Development","Full Stack Development",".NET Development","React / Next.js","Database & Data Engineering","Software Architecture","Cloud & DevOps","Cyber Security","AI / Machine Learning","Mobile Development","UI/UX Development"];
 const careerItems=["CV احترافي","GitHub Profile مرتب","Portfolio قوي","LinkedIn احترافي","توثيق المشاريع","كتابة وصف قوي لكل مشروع","إبراز المهارات والتقنيات","تحديث مستمر"];
+const cvData={
+ summary:"خريج Software Engineering من Jordan University of Science and Technology (JUST)، يبني أساسًا عمليًا قويًا في البرمجة وحل المشكلات وOOP وData Structures وDatabases وSoftware Architecture، مع خبرة مشاريع باستخدام C# وJava وJavaScript/TypeScript وReact/Next.js وSQL.",
+ education:["Bachelor of Software Engineering — Jordan University of Science and Technology (JUST) — 2026"],
+ skills:["C#","JavaScript","TypeScript","C++","Java","Python","HTML","CSS","React","Next.js","ASP.NET MVC","ASP.NET Core","Entity Framework","REST APIs","SQL Server","PostgreSQL","MySQL","Prisma","Git","GitHub","Tailwind CSS","OOP","Data Structures","Algorithms","SOLID","UML","Software Architecture"],
+ projects:[
+   ["Job Application Tracker","CRUD + APIs + database + testing + deployment"],
+   ["Customer Management","Next.js 16 + TypeScript + Prisma + PostgreSQL/Supabase"],
+   ["TREAQ","C# + ASP.NET MVC + Entity Framework + SQL Server"],
+   ["Campus Event System","Java Servlets + JSP + MySQL + MVC"],
+   ["Portfolio","React + TypeScript + Tailwind"],
+   ["PLUGIX","Next.js + TypeScript + Prisma + Auth + Admin + Store + Orders"],
+   ["Qareen","Next.js 16 + TypeScript + Prisma + PostgreSQL"]
+ ],
+ certs:["Cisco CCNA: Introduction to Networks","Cisco Industrial Cybersecurity Essentials","Introduction to Modern AI","HTML5 Essentials","Meta Full Stack Developer — Coursera (in progress / completed modules)"]
+};
 
 function renderAll(){renderDashboard();renderPlan();renderEnglish();renderSoftware();renderProjects();renderSpecialization();renderCareer();renderReports();loadSettings();renderDaily();renderHealth()}
 function renderDashboard(){
@@ -173,7 +201,21 @@ function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":
 function renderSpecialization(){ $("specAreas").innerHTML=specAreas.map(a=>`<div class="spec-item"><b>${a}</b><span>سجّل تقييمك بعد تجربة فعلية</span><div class="spec-score">${state.specialization.scores[a]||0}/10</div><input data-score="${a}" type="range" min="0" max="10" value="${state.specialization.scores[a]||0}"></div>`).join("");document.querySelectorAll("[data-score]").forEach(x=>x.oninput=e=>{state.specialization.scores[e.target.dataset.score]=+e.target.value;persist()});$("expArea").innerHTML=specAreas.map(x=>`<option>${x}</option>`).join("");$("expHistory").innerHTML=state.specialization.experiments.map(x=>`<div class="table-row"><b>${x.date}</b><span>${x.area} — ${x.task}</span><span>${x.note||""}</span></div>`).join("")||"<div class='empty'>لا توجد تجارب بعد.</div>"}
 $("saveExp").onclick=()=>{state.specialization.experiments.unshift({date:today(),area:$("expArea").value,task:$("expTask").value,note:$("expNote").value});$("expTask").value="";$("expNote").value="";persist();renderSpecialization()}
 
-function renderCareer(){$("careerItems").innerHTML=careerItems.map(x=>`<label class="career-item"><div><b>${x}</b><span>${state.career[x]?'Completed':'Not completed'}</span></div><input data-career="${x}" type="checkbox" ${state.career[x]?'checked':''}></label>`).join("");document.querySelectorAll("[data-career]").forEach(x=>x.onchange=e=>{state.career[e.target.dataset.career]=e.target.checked;persist()})}
+function renderCV(){
+  $("cvName").textContent=cvData.summary?state.profile.name:"Hashem Hamasha";
+  $("cvHeadline").textContent="Software Engineering Graduate · Junior Software Engineer";
+  $("cvSummary").textContent=cvData.summary;
+  $("cvEducation").innerHTML=cvData.education.map(x=>"<p>"+escapeHtml(x)+"</p>").join("");
+  $("cvSkills").innerHTML=cvData.skills.map(x=>"<span class='tag'>"+escapeHtml(x)+"</span>").join("");
+  $("cvProjects").innerHTML=cvData.projects.map(x=>"<div><b>"+escapeHtml(x[0])+"</b><span>"+escapeHtml(x[1])+"</span></div>").join("");
+  $("cvCerts").innerHTML=cvData.certs.map(x=>"<div><b>"+escapeHtml(x)+"</b></div>").join("");
+}
+function renderLearningMethod(){
+  const el=$("learningMethod");
+  if(!el)return;
+  el.innerHTML='<div class="learning-flow"><b>Learn</b><span>افهم المفهوم</span><b>Practice</b><span>طبّق</span><b>Build</b><span>اربطه بمشروع</span><b>Explain</b><span>اشرحه بصوتك</span><b>Review</b><span>راجع أخطاءك</span></div><ul>'+state.learning.rules.map(x=>"<li>"+escapeHtml(x)+"</li>").join("")+"</ul>";
+}
+{$("careerItems").innerHTML=careerItems.map(x=>`<label class="career-item"><div><b>${x}</b><span>${state.career[x]?'Completed':'Not completed'}</span></div><input data-career="${x}" type="checkbox" ${state.career[x]?'checked':''}></label>`).join("");document.querySelectorAll("[data-career]").forEach(x=>x.onchange=e=>{state.career[e.target.dataset.career]=e.target.checked;persist()})}
 
 function renderHealth(){let d=state.health[selectedDate]||{};$("healthWeight").value=d.weight||"";$("healthSleep").value=d.sleep||"";$("healthWorkout").checked=!!d.workout;$("healthWater").checked=!!d.water;let vals=Object.values(state.health);$("lastWeight").textContent=vals.length?vals[vals.length-1].weight+" kg":"—";let sleeps=vals.filter(x=>x.sleep).map(x=>+x.sleep);$("avgSleep").textContent=sleeps.length?(sleeps.reduce((a,b)=>a+b,0)/sleeps.length).toFixed(1)+"h":"—";$("workoutDays").textContent=vals.filter(x=>x.workout).length}
 $("saveHealth").onclick=()=>{state.health[selectedDate]={weight:$("healthWeight").value,sleep:$("healthSleep").value,workout:$("healthWorkout").checked,water:$("healthWater").checked};persist();renderHealth()}
@@ -191,108 +233,101 @@ $("resetData").onclick=()=>{if(confirm("حذف البيانات المحلية؟
 
 
 
-const CLOUD_CFG="hashem_supabase_cloud_v1";
-let supabaseClient=null, cloudUser=null, cloudTimer=null;
+const CLOUD_CFG="hashem_supabase_cloud_v2";
+const SUPABASE_URL="https://lepffckwdmrcckxnnfdx.supabase.co";
+let supabaseClient=null, cloudUser=null, cloudTimer=null, pendingPhone=null, pendingPassword=null;
 
-function setCloudStatus(label,ok){
-  const el=$("cloudStatus");
-  if(el){el.textContent=label;el.className="badge "+(ok?"good":"")}
-}
-function cloudMessage(msg,good){
-  const el=$("cloudMessage");
-  if(el){el.textContent=msg;el.style.color=good?"#237a42":"#b42318"}
-}
-function saveCloudKey(){
-  const key=($("cloudKey")?.value||"").trim();
-  if(key)localStorage.setItem(CLOUD_CFG,JSON.stringify({url:"https://lepffckwdmrcckxnnfdx.supabase.co",key:key}));
-}
-function loadCloudConfig(){
-  let cfg=JSON.parse(localStorage.getItem(CLOUD_CFG)||"null");
-  if(!cfg?.key){
-    const oldCfg=JSON.parse(localStorage.getItem("hashem_supabase_config_v1")||"null");
-    if(oldCfg?.key){
-      cfg={url:"https://lepffckwdmrcckxnnfdx.supabase.co",key:oldCfg.key};
-      localStorage.setItem(CLOUD_CFG,JSON.stringify(cfg));
-    }
-  }
-  if(cfg?.key && $("cloudKey"))$("cloudKey").value=cfg.key;
-}
-async function connectDatabase(){
-  try{
-    if(!window.supabase?.createClient){
-      cloudMessage("مكتبة Supabase لم تُحمّل. حدّث الصفحة بعد اكتمال Netlify Deploy.",false);return false;
-    }
-    saveCloudKey();
-    const cfg=JSON.parse(localStorage.getItem(CLOUD_CFG)||"null");
-    if(!cfg?.key){cloudMessage("أدخل Publishable Key من Supabase → Settings → API Keys.",false);return false;}
-    supabaseClient=window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-    const current=await supabaseClient.auth.getSession();
-    cloudUser=current.data.session?.user||null;
-    if(!cloudUser){
-      const anon=await supabaseClient.auth.signInAnonymously();
-      if(anon.error)throw anon.error;
-      cloudUser=anon.data.user;
-    }
-    setCloudStatus("Cloud Connected",true);
-    cloudMessage("تم الاتصال بقاعدة البيانات. جارِ جلب بياناتك…",true);
-    await pullDatabase();
-    return true;
-  }catch(e){
-    setCloudStatus("Cloud Error",false);
-    cloudMessage(e?.message||String(e),false);
-    return false;
-  }
+function setCloudStatus(label,ok){const el=$("cloudStatus");if(el){el.textContent=label;el.className="badge "+(ok?"good":"")}}
+function cloudMessage(msg,good){const el=$("cloudMessage");if(el){el.textContent=msg;el.style.color=good?"#237a42":"#b42318"}}
+function authMessage(msg,good=false){const el=$("authMessage");if(el){el.textContent=msg;el.style.color=good?"#237a42":"#b42318"}}
+function saveCloudKey(key){if(key)localStorage.setItem(CLOUD_CFG,JSON.stringify({url:SUPABASE_URL,key:key}))}
+function loadCloudConfig(){let cfg=JSON.parse(localStorage.getItem(CLOUD_CFG)||"null");if(!cfg?.key){const old=JSON.parse(localStorage.getItem("hashem_supabase_cloud_v1")||localStorage.getItem("hashem_supabase_config_v1")||"null");if(old?.key){cfg={url:SUPABASE_URL,key:old.key};saveCloudKey(old.key)}}if(cfg?.key){if($("cloudKey"))$("cloudKey").value=cfg.key;if($("authCloudKey"))$("authCloudKey").value=cfg.key}return cfg}
+function initSupabase(){if(!window.supabase?.createClient)throw new Error("Supabase SDK لم تُحمّل. حدّث الصفحة.");const cfg=loadCloudConfig();if(!cfg?.key)throw new Error("أدخل Publishable Key أولًا.");supabaseClient=window.supabase.createClient(SUPABASE_URL,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});return supabaseClient}
+function showApp(){ $("authGate")?.classList.add("hidden");$("appShell")?.classList.remove("locked");renderAll();go("dashboard");}
+function showAuth(){ $("authGate")?.classList.remove("hidden");$("appShell")?.classList.add("locked");}
+function normalizePhone(v){let p=String(v||"").trim().replace(/[\s()-]/g,"");if(!p.startsWith("+"))p="+"+p;return p}
+function setAuthMode(mode){window.authMode=mode;const login=mode==="login";$("loginTab").classList.toggle("active",login);$("signupTab").classList.toggle("active",!login);$("authPassword2").style.display=login?"none":"block";$("authSubmit").textContent=login?"دخول":"إنشاء الحساب";$("authPassword").autocomplete=login?"current-password":"new-password";authMessage("")}
+async function pushDatabase(silent){
+  if(!supabaseClient||!cloudUser){if(!silent)cloudMessage("لا يوجد حساب متصل.",false);return}
+  const result=await supabaseClient.from("user_dashboard_data").upsert({user_id:cloudUser.id,payload:state,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+  if(result.error)throw result.error;
+  if(!silent)cloudMessage("تمت المزامنة ✓",true);
 }
 async function pullDatabase(){
   if(!supabaseClient||!cloudUser)return;
   const result=await supabaseClient.from("user_dashboard_data").select("payload").eq("user_id",cloudUser.id).maybeSingle();
   if(result.error)throw result.error;
-  if(result.data?.payload){
-    state=mergeDeep(defaultState(),result.data.payload);
-    localStorage.setItem(LS,JSON.stringify(state));
-    renderAll();
-    cloudMessage("تم جلب آخر نسخة من قاعدة البيانات ✓",true);
-  }else{
-    await pushDatabase(true);
-    cloudMessage("تم إنشاء نسخة قاعدة البيانات الأولى ✓",true);
-  }
+  if(result.data?.payload){state=mergeDeep(defaultState(),result.data.payload);localStorage.setItem(LS,JSON.stringify(state));renderAll();cloudMessage("تم جلب بيانات حسابك ✓",true)}
+  else{await pushDatabase(true);cloudMessage("تم إنشاء مساحة بيانات حسابك ✓",true)}
 }
-async function pushDatabase(silent){
-  if(!supabaseClient||!cloudUser){
-    if(!silent)cloudMessage("اربط قاعدة البيانات أولًا.",false);
-    return;
-  }
-  const result=await supabaseClient.from("user_dashboard_data").upsert(
-    {user_id:cloudUser.id,payload:state,updated_at:new Date().toISOString()},
-    {onConflict:"user_id"}
-  );
-  if(result.error)throw result.error;
-  if(!silent)cloudMessage("تمت المزامنة ✓",true);
+function scheduleCloudSync(){if(!supabaseClient||!cloudUser)return;clearTimeout(cloudTimer);cloudTimer=setTimeout(()=>pushDatabase(true).catch(e=>console.warn("Cloud sync:",e)),900)}
+async function afterAuth(user){
+  cloudUser=user;
+  showApp();
+  try{await pullDatabase()}catch(e){setCloudStatus("Cloud Error",false);console.warn(e)}
+  if($("accountStatus"))$("accountStatus").textContent=user?.phone?"متصل: "+user.phone:"حساب متصل";
 }
-async function syncDatabase(){
+async function submitAuth(){
   try{
-    if(!supabaseClient||!cloudUser){
-      const ok=await connectDatabase();if(!ok)return;
+    initSupabase();
+    const phone=normalizePhone($("authPhone").value),password=$("authPassword").value;
+    if(!/^\+[1-9]\d{7,14}$/.test(phone))throw new Error("اكتب رقم الهاتف بصيغة دولية مثل +9627xxxxxxxx.");
+    if(password.length<8)throw new Error("كلمة المرور يجب أن تكون 8 أحرف على الأقل.");
+    if(window.authMode==="signup"){
+      if(password!==$("authPassword2").value)throw new Error("تأكيد كلمة المرور غير مطابق.");
+      const {data,error}=await supabaseClient.auth.signUp({phone,password});
+      if(error)throw error;
+      pendingPhone=phone;pendingPassword=password;
+      if(data.session){cloudUser=data.user;await pushDatabase(true);authMessage("تم إنشاء الحساب وحفظ بياناتك ✓",true);await afterAuth(data.user)}
+      else{$("otpBox").style.display="block";authMessage("تم إرسال رمز التحقق إلى هاتفك. أدخل الـOTP.",true)}
     }else{
-      await pushDatabase(false);
+      const {data,error}=await supabaseClient.auth.signInWithPassword({phone,password});
+      if(error)throw error;
+      await afterAuth(data.user);
     }
-  }catch(e){cloudMessage(e?.message||String(e),false)}
+  }catch(e){authMessage(e?.message||String(e),false)}
 }
-function scheduleCloudSync(){
-  if(!supabaseClient||!cloudUser)return;
-  clearTimeout(cloudTimer);
-  cloudTimer=setTimeout(function(){pushDatabase(true).catch(function(e){console.warn("Cloud sync:",e)})},1200);
+async function verifyPhoneOtp(){
+  try{
+    initSupabase();
+    const phone=pendingPhone||normalizePhone($("authPhone").value),token=$("authOtp").value.trim();
+    if(!/^\d{6}$/.test(token))throw new Error("أدخل رمزًا من 6 أرقام.");
+    const {data,error}=await supabaseClient.auth.verifyOtp({phone,token,type:"sms"});
+    if(error)throw error;
+    if(data.session?.user){cloudUser=data.session.user;await pushDatabase(true);$("otpBox").style.display="none";await afterAuth(data.session.user);authMessage("تم تأكيد الرقم والدخول ✓",true)}
+  }catch(e){authMessage(e?.message||String(e),false)}
 }
+async function signOut(){
+  if(!supabaseClient)try{initSupabase()}catch{}
+  if(supabaseClient)await supabaseClient.auth.signOut();
+  cloudUser=null;showAuth();authMessage("تم تسجيل الخروج.");setCloudStatus("Local",false)
+}
+async function connectDatabase(){
+  try{
+    initSupabase();
+    const session=(await supabaseClient.auth.getSession()).data.session;
+    if(!session){setCloudStatus("Login Required",false);cloudMessage("سجّل الدخول من شاشة الحساب أولًا.",false);showAuth();return false}
+    await afterAuth(session.user);setCloudStatus("Cloud Connected",true);cloudMessage("تم الاتصال ✓",true);return true;
+  }catch(e){setCloudStatus("Cloud Error",false);cloudMessage(e?.message||String(e),false);return false}
+}
+async function syncDatabase(){try{if(!supabaseClient||!cloudUser){const ok=await connectDatabase();if(!ok)return}else await pushDatabase(false)}catch(e){cloudMessage(e?.message||String(e),false)}}
 
 document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>go(x.dataset.page));
 $("menuBtn").onclick=()=>document.querySelector(".sidebar").classList.toggle("open");
+$("loginTab").onclick=()=>setAuthMode("login");
+$("signupTab").onclick=()=>setAuthMode("signup");
+$("authSubmit").onclick=submitAuth;
+$("verifyOtp").onclick=verifyPhoneOtp;
+$("signOut").onclick=signOut;
+
 async function start(){
-  renderAll();
-  loadCloudConfig();
-  if($("connectDatabase"))$("connectDatabase").onclick=connectDatabase;
-  if($("syncDatabase"))$("syncDatabase").onclick=syncDatabase;
-  go("dashboard");
-  const cfg=JSON.parse(localStorage.getItem(CLOUD_CFG)||"null");
-  if(cfg?.key){setCloudStatus("Connecting…",false);await connectDatabase()}
+  renderAll();loadCloudConfig();setAuthMode("login");
+  try{
+    initSupabase();
+    const session=(await supabaseClient.auth.getSession()).data.session;
+    if(session?.user){await afterAuth(session.user);setCloudStatus("Cloud Connected",true)}
+    else showAuth();
+    supabaseClient.auth.onAuthStateChange(async(_event,session)=>{if(session?.user){cloudUser=session.user;showApp()}else{cloudUser=null;showAuth()}});
+  }catch(e){showAuth();authMessage("قبل الدخول: أدخل Publishable Key من Supabase.");console.warn(e)}
 }
 start();
