@@ -308,10 +308,16 @@ $("menuBtn").onclick=()=>document.querySelector(".sidebar").classList.toggle("op
 $("signOut").onclick=signOut;
 
 async function start(){
-  renderAll();
+  // Bind the login controls first so a rendering error cannot disable login.
+  const submit=$("authSubmit"), password=$("authPassword");
+  if(submit) submit.onclick=unlockApp;
+  if(password) password.onkeydown=e=>{if(e.key==="Enter")unlockApp()};
+  try{
+    renderAll();
+  }catch(e){
+    console.error("Dashboard render error:",e);
+  }
   const unlocked=localStorage.getItem("hashem_life_os_unlocked")==="1";
   if(unlocked) showApp(); else showAuth();
-  $("authSubmit").onclick=unlockApp;
-  $("authPassword").onkeydown=e=>{if(e.key==="Enter")unlockApp()};
 }
 start();
