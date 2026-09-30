@@ -13,3 +13,8 @@
 .project-focus{display:block;color:#5f6c80;font-size:12px;line-height:1.7;margin-top:8px;min-height:48px}
 @media(max-width:1100px){.profile-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.profile-grid{grid-template-columns:1fr}}
+
+.cloud-card{border:1px solid #dbe7f7;background:linear-gradient(135deg,#fff,#f7fbff)}
+.cloud-actions{justify-content:flex-start;gap:8px;align-items:center}
+.cloud-help{margin:10px 0 0;font-size:11px}
+.project-stack{line-height:1.5}
