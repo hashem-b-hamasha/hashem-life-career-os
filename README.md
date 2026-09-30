@@ -17,6 +17,8 @@ Personal 8-week Software Engineering + English + Projects + Career dashboard.
 - JSON Export / Import
 - Supabase PostgreSQL Cloud Sync
 - No visible Login / Signup screen
+- Supabase Anonymous Cloud Session
+- Local + Cloud data with RLS isolation
 
 ## Daily allocation
 - Software Engineering: 3h
@@ -28,18 +30,20 @@ Personal 8-week Software Engineering + English + Projects + Career dashboard.
 
 ## Supabase setup
 
-The dashboard uses Supabase Anonymous Sign-In in the background, so the user does not see a login form. Supabase anonymous users still receive their own user UUID and the database is protected with RLS.
+The dashboard uses Supabase Anonymous Sign-In in the background. There is no phone/password login screen in this version.
 
-1. In Supabase Dashboard open Authentication > Sign In / Providers and enable Allow anonymous sign-ins.
-2. Open SQL Editor and run the complete supabase.sql file.
+1. In Supabase Dashboard open Authentication > Sign In / Providers and enable **Anonymous Sign-Ins**.
+2. Open SQL Editor and run the complete `supabase.sql` file.
 3. Open the dashboard > Settings & Backup.
-4. Enter the Publishable Key (sb_publishable_...) and click ربط قاعدة البيانات.
-5. The app automatically creates an anonymous session, loads existing data, or creates the first database row from the local seeded dashboard data.
-6. After connection, every change is automatically synchronized to Supabase.
+4. Enter the **Publishable Key** (`sb_publishable_...`) and click **ربط قاعدة البيانات**.
+5. The app creates or restores its Anonymous Cloud Session, then loads the Cloud row for that session.
+6. Local changes are saved to LocalStorage and automatically synced to Supabase when Cloud is connected.
+7. **حذف البيانات المحلية فقط** removes browser-local data; it does not delete the Cloud row.
+8. **فصل Cloud Session** signs the anonymous user out. Because anonymous users have no permanent identity, that same session cannot be recovered after sign-out or clearing browser data. Keep JSON backups.
 
 Never use a Secret / Service Role key in the browser.
 
-Supabase publishable keys are intended for browser applications; RLS is what protects the database. Anonymous sign-ins use the authenticated Postgres role, so the SQL policies restrict access to the current anonymous user's UUID.
+Supabase Anonymous users use the `authenticated` Postgres role, while RLS restricts every row to `auth.uid() = user_id`.
 
 ## Data seed
 
