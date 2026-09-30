@@ -96,10 +96,57 @@ function renderDaily(){
 $("dayDate").onchange=e=>{selectedDate=e.target.value;renderDaily()}
 $("saveDay").onclick=()=>{let x=todayDay();x.hours={se:+$("hSe").value||0,en:+$("hEn").value||0,project:+$("hProject").value||0,spec:+$("hSpec").value||0,career:+$("hCareer").value||0};x.done=$("done").value;x.missed=$("missed").value;x.learned=$("learned").value;state.days[selectedDate]=x;persist();$("saveMsg").textContent="تم الحفظ ✓";setTimeout(()=>$("saveMsg").textContent="",2000)}
 
-function renderPlan(){const weekTasks={1:["Programming Fundamentals: variables, types, conditions, loops, functions","English: General Foundation + daily listening","Projects: audit all 7 projects and choose one small fix","Specialization: baseline ratings for every area","Career: GitHub profile baseline","Health: keep health tracking separate from 8h"],2:["Problem Solving: decomposition, pseudocode, edge cases, complexity basics","English: Listening + Speaking routines","Projects: Job Application Tracker + Customer Management review","Specialization: first backend/frontend/full-stack experiments","Career: clean GitHub repos and READMEs","Health: record weekly trend"],3:["Data Structures: arrays, linked lists, stacks, queues, hash tables","English: Technical English + vocabulary","Projects: TREAQ + Campus Event System review","Specialization: database/data + architecture experiment","Career: project descriptions and tech stack mapping","Health: continue separate log"],4:["Algorithms: searching, sorting, recursion, Big-O practice","English: Speaking + Interview English","Projects: Portfolio + PLUGIX improvement sprint","Specialization: React/Next + .NET/backend experiment without commitment","Career: CV first strong draft","Health: weekly review"],5:["OOP + Clean Code + SOLID + Design Patterns","English: Professional Communication + writing","Projects: Qareen architecture/code review","Specialization: cloud/devops/security/AI experiments","Career: LinkedIn + portfolio content","Health: continue separate log"],6:["Databases/SQL + Operating Systems + Networking/Web Fundamentals","English: IELTS/Canada preparation + listening","Projects: testing, security and documentation across selected projects","Specialization: compare results from experiments","Career: GitHub README quality + CV refinement","Health: weekly review"],7:["APIs/REST + Auth/Authorization + Security + Testing","English: mock interviews + technical speaking","Projects: deployment, Docker and production-readiness work","Specialization: repeat the 2–3 strongest experiments","Career: LinkedIn/CV/portfolio consistency","Health: continue separate log"],8:["Docker + CI/CD + Deployment + Cloud Basics + System Design","English: final interview simulation + speaking review","Projects: final polish of strongest projects and documentation","Specialization: evidence-based direction summary, no forced choice","Career: final CV + GitHub + Portfolio + LinkedIn checklist","Health: 8-week review separately"]};let arr=[];Object.entries(weekTasks).forEach(([w,tasks])=>{const done=tasks.filter((_,i)=>state.plan[w+"-"+i]).length;arr.push('<div class="week"><div class="week-head"><h2>الأسبوع '+w+'</h2><span class="badge">'+done+'/'+tasks.length+'</span></div><div class="week-tasks">'+tasks.map((t,i)=>{const k=w+"-"+i;return '<label class="week-task '+(state.plan[k]?"done":"")+'"><input type="checkbox" data-plan="'+k+'" '+(state.plan[k]?"checked":"")+">'+t+'</label>'}).join("")+"</div></div>")});$("weeks").innerHTML=arr.join("");document.querySelectorAll("[data-plan]").forEach(x=>x.onchange=e=>{state.plan[e.target.dataset.plan]=e.target.checked;persist()})}
-function renderEnglish(){let done=Object.values(state.english.modules).filter(Boolean).length;$("englishMetrics").innerHTML=[["Modules Completed",done+"/9"],["Speaking Sessions",state.english.speaking.length],["Speaking Minutes",state.english.speaking.reduce((a,b)=>a+(+b.minutes||0),0)],["Goal","Work + Study + Life"]].map(x=>`<div class="metric"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");$("englishModules").innerHTML=englishModules.map(x=>`<label class="module"><input type="checkbox" data-en="${x[0]}" ${state.english.modules[x[0]]?'checked':''}><b>${x[1]}</b><span>${state.english.modules[x[0]]?'Completed':'In progress'}</span></label>`).join("");document.querySelectorAll("[data-en]").forEach(x=>x.onchange=e=>{state.english.modules[e.target.dataset.en]=e.target.checked;persist();renderEnglish()});$("speakingHistory").innerHTML=state.english.speaking.map(x=>`<div class="table-row"><b>${x.date}</b><span>${x.topic}</span><span class="badge">${x.minutes} min</span></div>`).join("")||"<div class='empty'>لا توجد جلسات بعد.</div>"}
-$("saveSpeaking").onclick=()=>{if(!$("speakTopic").value)return;state.english.speaking.unshift({date:today(),topic:$("speakTopic").value,minutes:+$("speakMinutes").value||0,notes:$("speakNotes").value});$("speakTopic").value="";$("speakMinutes").value="";$("speakNotes").value="";persist();renderEnglish()}
 
+function renderPlan(){
+  const weeks={
+    1:["Programming Fundamentals","General English + daily listening","Audit all 7 projects","Baseline specialization ratings","GitHub profile baseline","Keep health separate from 8h"],
+    2:["Problem Solving","Listening + Speaking","Job Application Tracker + Customer Management review","Backend / Frontend / Full Stack experiments","Clean GitHub repos + READMEs","Weekly health trend"],
+    3:["Data Structures","Technical English + vocabulary","TREAQ + Campus Event System review","Database + Architecture experiment","Project descriptions + tech mapping","Weekly review"],
+    4:["Algorithms + Big-O","Speaking + Interview English","Portfolio + PLUGIX sprint","React/Next + backend experiment","CV first strong draft","Weekly review"],
+    5:["OOP + Clean Code + SOLID + Patterns","Professional Communication + writing","Qareen architecture/code review","Cloud / DevOps / Security / AI experiments","LinkedIn + Portfolio content","Weekly review"],
+    6:["SQL + OS + Networking/Web","IELTS / Canada preparation","Testing + security + documentation","Compare specialization experiments","CV + GitHub refinement","Weekly review"],
+    7:["REST + Auth + Security + Testing","Mock interviews + technical speaking","Docker + deployment + production readiness","Repeat strongest experiments","CV + LinkedIn + Portfolio consistency","Weekly review"],
+    8:["Docker + CI/CD + Cloud + System Design","Final interview simulation","Final polish of strongest projects","Evidence-based direction summary","Final career checklist","8-week review"]
+  };
+  $("weeks").innerHTML=Object.entries(weeks).map(function(entry){
+    const w=entry[0],tasks=entry[1];
+    const done=tasks.filter(function(_,i){return !!state.plan[w+"-"+i]}).length;
+    const items=tasks.map(function(task,i){
+      const key=w+"-"+i;
+      return '<label class="week-task '+(state.plan[key]?'done':'')+'"><input type="checkbox" data-plan="'+key+'" '+(state.plan[key]?'checked':'')+'>'+task+'</label>';
+    }).join("");
+    return '<div class="week"><div class="week-head"><h2>الأسبوع '+w+'</h2><span class="badge">'+done+'/'+tasks.length+'</span></div><div class="week-tasks">'+items+'</div></div>';
+  }).join("");
+  document.querySelectorAll("[data-plan]").forEach(function(el){
+    el.onchange=function(e){state.plan[e.target.dataset.plan]=e.target.checked;persist()};
+  });
+}
+
+function renderEnglish(){
+  const done=Object.values(state.english.modules).filter(Boolean).length;
+  const minutes=state.english.speaking.reduce(function(sum,x){return sum+(Number(x.minutes)||0)},0);
+  $("englishMetrics").innerHTML=[
+    ["Modules Completed",done+"/9"],
+    ["Speaking Sessions",state.english.speaking.length],
+    ["Speaking Minutes",minutes],
+    ["Goal","Work + Study + Life"]
+  ].map(function(x){return '<div class="metric"><span>'+x[0]+'</span><b>'+x[1]+'</b></div>'}).join("");
+  $("englishModules").innerHTML=englishModules.map(function(x){
+    return '<label class="module"><input type="checkbox" data-en="'+x[0]+'" '+(state.english.modules[x[0]]?'checked':'')+'><b>'+x[1]+'</b><span>'+(state.english.modules[x[0]]?'Completed':'In progress')+'</span></label>';
+  }).join("");
+  document.querySelectorAll("[data-en]").forEach(function(el){
+    el.onchange=function(e){state.english.modules[e.target.dataset.en]=e.target.checked;persist()};
+  });
+  $("speakingHistory").innerHTML=state.english.speaking.map(function(x){
+    return '<div class="table-row"><b>'+escapeHtml(x.date)+'</b><span>'+escapeHtml(x.topic)+'</span><span class="badge">'+(Number(x.minutes)||0)+' min</span></div>';
+  }).join("") || '<div class="empty">لا توجد جلسات بعد.</div>';
+}
+$("saveSpeaking").onclick=function(){
+  if(!$("speakTopic").value.trim())return;
+  state.english.speaking.unshift({date:today(),topic:$("speakTopic").value.trim(),minutes:Number($("speakMinutes").value)||0,notes:$("speakNotes").value.trim()});
+  $("speakTopic").value="";$("speakMinutes").value="";$("speakNotes").value="";
+  persist();
+};
 function renderSoftware(){let saved=state.software; $("softwareTracks").innerHTML=softwareTracks.map((track,ti)=>{let done=track.slice(1).filter(x=>saved[x]).length;return `<div class="track"><div class="card-head"><div><b>${ti+1}. ${track[0]}</b><span>${done}/${track.length-1} completed</span></div><span class="badge">${Math.round(done/(track.length-1)*100)}%</span></div>${track.slice(1).map(x=>`<label class="check ${saved[x]?'done':''}"><input type="checkbox" data-soft="${x}" ${saved[x]?'checked':''}>${x}</label>`).join("")}</div>`}).join("");document.querySelectorAll("[data-soft]").forEach(x=>x.onchange=e=>{state.software[e.target.dataset.soft]=e.target.checked;persist();renderSoftware()})}
 
 function renderProjects(){
