@@ -415,6 +415,8 @@ document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>go(x.dataset.page));
 $("menuBtn").onclick=()=>document.querySelector(".sidebar").classList.toggle("open");
 // Authentication is handled by the single fixed-password gate below.
 $("signOut").onclick=signOut;
+$("connectDatabase").onclick=connectDatabase;
+$("syncDatabase").onclick=syncDatabase;
 
 async function start(){
   // Bind the login controls first so a rendering error cannot disable login.
