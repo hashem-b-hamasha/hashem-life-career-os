@@ -7,15 +7,24 @@
 <link rel="manifest" href="manifest.json"><link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="authScreen" class="auth-screen hidden">
-  <div class="auth-card">
-    <div class="brand">H<span>•</span>OS</div><h1>Hashem Life & Career OS</h1>
-    <p>سجّل دخولك حتى تقدر تحفظ بياناتك على Cloud، أو استخدم Local Mode بدون حساب.</p>
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card auth-wide">
+    <div class="brand">H<span>•</span>OS</div>
+    <h1>Hashem Life & Career OS</h1>
+    <p>نظامك الشخصي للـ8 أسابيع: Software Engineering + English + Projects + Specialization + Career.</p>
+    <div class="auth-config">
+      <div class="config-title">☁️ إعداد Cloud لأول مرة</div>
+      <p>Project URL ثابت لهذا المشروع. أضف <b>Publishable Key</b> من Supabase → Settings → API. لا تستخدم Service Role / Secret Key.</p>
+      <input id="authSbUrl" type="url" value="https://lepffckwdmrcckxnnfdx.supabase.co" placeholder="Supabase Project URL">
+      <input id="authSbKey" type="text" placeholder="sb_publishable_...">
+      <button class="secondary" id="saveAuthConfig">حفظ إعداد Cloud</button>
+      <div id="authConfigMsg" class="msg"></div>
+    </div>
     <div class="tabs"><button class="tab active" data-auth="login">تسجيل الدخول</button><button class="tab" data-auth="signup">إنشاء حساب</button></div>
-    <input id="authEmail" type="email" placeholder="Email">
-    <input id="authPassword" type="password" placeholder="Password">
+    <input id="authEmail" type="email" autocomplete="email" placeholder="Email">
+    <input id="authPassword" type="password" autocomplete="current-password" placeholder="Password">
     <button class="primary" id="authSubmit">دخول</button>
-    <button class="link-btn" id="localModeBtn">الدخول بالوضع المحلي</button>
+    <button class="link-btn" id="localModeBtn">الدخول بالوضع المحلي بدون حساب</button>
     <div id="authMsg" class="msg"></div>
   </div>
 </div>
@@ -23,7 +32,7 @@
 <div class="app-shell">
 <aside class="sidebar">
   <div class="brand">H<span>•</span>OS</div>
-  <div class="user-box"><b id="userName">Hashem</b><small id="syncStatus">Local Mode</small></div>
+  <div class="user-box"><b id="userName">Hashem</b><small id="syncStatus">Local Mode</small><button id="signOut" class="sidebar-action hidden">تسجيل الخروج</button></div>
   <nav>
     <button class="nav active" data-page="dashboard">⌂ <span>الرئيسية</span></button>
     <button class="nav" data-page="daily">✓ <span>سجل اليوم</span></button>
