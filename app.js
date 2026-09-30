@@ -269,6 +269,9 @@ async function afterAuth(user){
 }
 async function submitAuth(){
   try{
+    // The key is entered on the auth screen, so save it before creating the client.
+    const enteredKey=$("authCloudKey")?.value?.trim();
+    if(enteredKey)saveCloudKey(enteredKey);
     initSupabase();
     const phone=normalizePhone($("authPhone").value),password=$("authPassword").value;
     if(!/^\+[1-9]\d{7,14}$/.test(phone))throw new Error("اكتب رقم الهاتف بصيغة دولية مثل +9627xxxxxxxx.");
