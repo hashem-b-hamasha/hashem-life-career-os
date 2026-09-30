@@ -252,8 +252,64 @@ function renderLearningMethod(){
 }
 {$("careerItems").innerHTML=careerItems.map(x=>`<label class="career-item"><div><b>${x}</b><span>${state.career[x]?'Completed':'Not completed'}</span></div><input data-career="${x}" type="checkbox" ${state.career[x]?'checked':''}></label>`).join("");document.querySelectorAll("[data-career]").forEach(x=>x.onchange=e=>{state.career[e.target.dataset.career]=e.target.checked;persist()})}
 
-function renderHealth(){let d=state.health[selectedDate]||{};$("healthWeight").value=d.weight||"";$("healthSleep").value=d.sleep||"";$("healthWorkout").checked=!!d.workout;$("healthWater").checked=!!d.water;let vals=Object.values(state.health);$("lastWeight").textContent=vals.length?vals[vals.length-1].weight+" kg":"—";let sleeps=vals.filter(x=>x.sleep).map(x=>+x.sleep);$("avgSleep").textContent=sleeps.length?(sleeps.reduce((a,b)=>a+b,0)/sleeps.length).toFixed(1)+"h":"—";$("workoutDays").textContent=vals.filter(x=>x.workout).length}
-$("saveHealth").onclick=()=>{state.health[selectedDate]={weight:$("healthWeight").value,sleep:$("healthSleep").value,workout:$("healthWorkout").checked,water:$("healthWater").checked};persist();renderHealth()}
+function renderHealth(){
+  const d=state.health[selectedDate]||{};
+  $("healthWeight").value=d.weight??"";
+  $("healthSleep").value=d.sleep??"";
+  $("healthWorkout").checked=!!d.workout;
+  $("healthWater").checked=!!d.water;
+
+  const entries=Object.entries(state.health||{}).sort((a,b)=>b[0].localeCompare(a[0]));
+  const vals=entries.map(x=>x[1]).filter(Boolean);
+  const latest=vals.find(x=>x.weight!==""&&x.weight!=null);
+  $("lastWeight").textContent=latest?Number(latest.weight).toLocaleString("en-US")+" kg":"—";
+
+  const sleeps=vals.filter(x=>x.sleep!==""&&x.sleep!=null).map(x=>Number(x.sleep)).filter(Number.isFinite);
+  $("avgSleep").textContent=sleeps.length?(sleeps.reduce((a,b)=>a+b,0)/sleeps.length).toFixed(1)+"h":"—";
+  $("workoutDays").textContent=vals.filter(x=>x.workout).length;
+}
+
+function saveHealth(){
+  try{
+    const weight=$("healthWeight").value.trim();
+    const sleep=$("healthSleep").value.trim();
+    if(!weight && !sleep && !$("healthWorkout").checked && !$("healthWater").checked){
+      alert("أدخل وزن أو نوم أو اختر حالة التمرين/الماء أولًا.");
+      return;
+    }
+    if(weight && (!Number.isFinite(Number(weight)) || Number(weight)<=0 || Number(weight)>500)){
+      alert("أدخل وزنًا صحيحًا.");
+      return;
+    }
+    if(sleep && (!Number.isFinite(Number(sleep)) || Number(sleep)<0 || Number(sleep)>24)){
+      alert("أدخل عدد ساعات نوم صحيح.");
+      return;
+    }
+
+    if(!state.health || typeof state.health!=="object" || Array.isArray(state.health)) state.health={};
+
+    state.health[selectedDate]={
+      weight:weight,
+      sleep:sleep,
+      workout:$("healthWorkout").checked,
+      water:$("healthWater").checked
+    };
+
+    persist();
+    renderHealth();
+
+    const button=$("saveHealth");
+    if(button){
+      const original=button.textContent;
+      button.textContent="تم الحفظ ✓";
+      button.disabled=true;
+      setTimeout(()=>{button.textContent=original;button.disabled=false},1200);
+    }
+  }catch(e){
+    console.error("Health save error:",e);
+    alert("تعذر حفظ بيانات الصحة: "+(e?.message||String(e)));
+  }
+}
 
 function renderReports(){let entries=Object.entries(state.days),hours=entries.reduce((s,[,d])=>s+Object.values(d.hours).reduce((a,b)=>a+b,0),0);let avg=entries.length?hours/entries.length:0;$("reportMetrics").innerHTML=[["Days Logged",entries.length],["Total Hours",hours.toFixed(1)+"h"],["Average / Day",avg.toFixed(1)+"h"],["8h Days",entries.filter(([,d])=>Object.values(d.hours).reduce((a,b)=>a+b,0)>=8).length]].map(x=>`<div class="metric"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");let rows=[];for(let i=6;i>=0;i--){let date=addDays(today(),-i),d=state.days[date],h=d?Object.values(d.hours).reduce((a,b)=>a+b,0):0;rows.push(`<div class="hour-row"><span>${date}</span><div class="bar"><i style="width:${Math.min(100,h/8*100)}%"></i></div><b>${h}h</b></div>`)}$("weeklyBars").innerHTML=rows.join("");let r=state.reviews[weekKey()]||{};$("reviewWin").value=r.win||"";$("reviewBlock").value=r.block||"";$("reviewNext").value=r.next||""}
 function weekKey(){let d=new Date(),one=new Date(d.getFullYear(),0,1);return "w"+Math.ceil((((d-one)/86400000)+one.getDay()+1)/7)}
@@ -415,6 +471,7 @@ document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>go(x.dataset.page));
 $("menuBtn").onclick=()=>document.querySelector(".sidebar").classList.toggle("open");
 // Authentication is handled by the single fixed-password gate below.
 $("signOut").onclick=signOut;
+$("saveHealth").onclick=saveHealth;
 $("connectDatabase").onclick=connectDatabase;
 $("syncDatabase").onclick=syncDatabase;
 
@@ -422,6 +479,7 @@ async function start(){
   // Bind the login controls first so a rendering error cannot disable login.
   const submit=$("authSubmit"), password=$("authPassword");
   if(submit) submit.onclick=unlockApp;
+  const healthButton=$("saveHealth"); if(healthButton) healthButton.onclick=saveHealth;
   if(password) password.onkeydown=e=>{if(e.key==="Enter")unlockApp()};
   try{
     renderAll();
