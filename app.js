@@ -5,11 +5,46 @@ const $=id=>document.getElementById(id);
 function today(){return new Date().toISOString().slice(0,10)}
 function defaultState(){return{
  settings:{start:today(),end:addDays(today(),56)},
- days:{}, plan:{}, english:{modules:{},speaking:[]}, software:{}, projects:{}, specialization:{experiments:[],scores:{}}, career:{}, reviews:{}, health:{}
+ profile:{
+   name:"Hashem Hamasha",
+   degree:"Bachelor of Software Engineering",
+   university:"Jordan University of Science and Technology (JUST)",
+   graduation:"2026",
+   goal:"Software Engineer",
+   period:"8 weeks",
+   dailyHours:8
+ },
+ days:{}, plan:{},
+ english:{modules:{},speaking:[]},
+ software:{},
+ projects:{
+   "Job Application Tracker":{progress:0,status:"Planned",note:"CRUD + APIs + deployment + testing"},
+   "Customer Management":{progress:0,status:"Planned",note:"Next.js 16 + TypeScript + Tailwind + Prisma + PostgreSQL/Supabase"},
+   "TREAQ — Graduation Project":{progress:0,status:"Planned",note:"C# + ASP.NET MVC + Entity Framework + SQL Server"},
+   "Campus Event System":{progress:0,status:"Planned",note:"Java Servlets + JSP + MySQL + MVC"},
+   "Portfolio":{progress:0,status:"Planned",note:"React + TypeScript + Tailwind"},
+   "PLUGIX":{progress:0,status:"Planned",note:"Next.js + TypeScript + Prisma + Auth + Admin + Store + Orders"},
+   "Qareen":{progress:0,status:"Planned",note:"Next.js 16 + TypeScript + Tailwind + Prisma + PostgreSQL"}
+ },
+ specialization:{experiments:[],scores:{}},
+ career:{},
+ reviews:{},
+ health:{}
 }}
 function addDays(date,n){let d=new Date(date+"T12:00:00");d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
-function loadState(){try{return Object.assign(defaultState(),JSON.parse(localStorage.getItem(LS)||"{}"))}catch{return defaultState()}}
-function persist(){localStorage.setItem(LS,JSON.stringify(state)); renderAll()}
+function mergeDeep(base,extra){
+  Object.keys(extra||{}).forEach(function(k){
+    if(extra[k] && typeof extra[k]==="object" && !Array.isArray(extra[k]) && base[k] && typeof base[k]==="object" && !Array.isArray(base[k])){
+      mergeDeep(base[k],extra[k]);
+    }else{base[k]=extra[k]}
+  });
+  return base;
+}
+function loadState(){
+  try{return mergeDeep(defaultState(),JSON.parse(localStorage.getItem(LS)||"{}"))}
+  catch{return defaultState()}
+}
+function persist(){localStorage.setItem(LS,JSON.stringify(state)); renderAll(); scheduleCloudSync()}
 function todayDay(){return state.days[selectedDate]||{hours:{se:0,en:0,project:0,spec:0,career:0},tasks:{},done:"",missed:"",learned:""}}
 function go(page){currentPage=page;document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(page).classList.add("active");document.querySelectorAll(".nav").forEach(x=>x.classList.toggle("active",x.dataset.page===page));if(page==="daily")renderDaily();if(page==="health")renderHealth();window.scrollTo(0,0)}
 window.go=go;
@@ -108,7 +143,101 @@ $("importData").onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new File
 $("resetData").onclick=()=>{if(confirm("حذف البيانات المحلية؟ احتفظ بنسخة Export أولًا.")){localStorage.removeItem(LS);location.reload()}}
 
 
-document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>go(x.dataset.page));
+
+const CLOUD_CFG="hashem_supabase_cloud_v1";
+let supabaseClient=null, cloudUser=null, cloudTimer=null;
+
+function setCloudStatus(label,ok){
+  const el=$("cloudStatus");
+  if(el){el.textContent=label;el.className="badge "+(ok?"good":"")}
+}
+function cloudMessage(msg,good){
+  const el=$("cloudMessage");
+  if(el){el.textContent=msg;el.style.color=good?"#237a42":"#b42318"}
+}
+function saveCloudKey(){
+  const key=($("cloudKey")?.value||"").trim();
+  if(key)localStorage.setItem(CLOUD_CFG,JSON.stringify({url:"https://lepffckwdmrcckxnnfdx.supabase.co",key:key}));
+}
+function loadCloudConfig(){
+  const cfg=JSON.parse(localStorage.getItem(CLOUD_CFG)||"null");
+  if(cfg?.key && $("cloudKey"))$("cloudKey").value=cfg.key;
+}
+async function connectDatabase(){
+  try{
+    if(!window.supabase?.createClient){
+      cloudMessage("مكتبة Supabase لم تُحمّل. حدّث الصفحة بعد اكتمال Netlify Deploy.",false);return false;
+    }
+    saveCloudKey();
+    const cfg=JSON.parse(localStorage.getItem(CLOUD_CFG)||"null");
+    if(!cfg?.key){cloudMessage("أدخل Publishable Key من Supabase → Settings → API Keys.",false);return false;}
+    supabaseClient=window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+    const current=await supabaseClient.auth.getSession();
+    cloudUser=current.data.session?.user||null;
+    if(!cloudUser){
+      const anon=await supabaseClient.auth.signInAnonymously();
+      if(anon.error)throw anon.error;
+      cloudUser=anon.data.user;
+    }
+    setCloudStatus("Cloud Connected",true);
+    cloudMessage("تم الاتصال بقاعدة البيانات. جارِ جلب بياناتك…",true);
+    await pullDatabase();
+    return true;
+  }catch(e){
+    setCloudStatus("Cloud Error",false);
+    cloudMessage(e?.message||String(e),false);
+    return false;
+  }
+}
+async function pullDatabase(){
+  if(!supabaseClient||!cloudUser)return;
+  const result=await supabaseClient.from("user_dashboard_data").select("payload").eq("user_id",cloudUser.id).maybeSingle();
+  if(result.error)throw result.error;
+  if(result.data?.payload){
+    state=mergeDeep(defaultState(),result.data.payload);
+    localStorage.setItem(LS,JSON.stringify(state));
+    renderAll();
+    cloudMessage("تم جلب آخر نسخة من قاعدة البيانات ✓",true);
+  }else{
+    await pushDatabase(true);
+    cloudMessage("تم إنشاء نسخة قاعدة البيانات الأولى ✓",true);
+  }
+}
+async function pushDatabase(silent){
+  if(!supabaseClient||!cloudUser){
+    if(!silent)cloudMessage("اربط قاعدة البيانات أولًا.",false);
+    return;
+  }
+  const result=await supabaseClient.from("user_dashboard_data").upsert(
+    {user_id:cloudUser.id,payload:state,updated_at:new Date().toISOString()},
+    {onConflict:"user_id"}
+  );
+  if(result.error)throw result.error;
+  if(!silent)cloudMessage("تمت المزامنة ✓",true);
+}
+async function syncDatabase(){
+  try{
+    if(!supabaseClient||!cloudUser){
+      const ok=await connectDatabase();if(!ok)return;
+    }else{
+      await pushDatabase(false);
+    }
+  }catch(e){cloudMessage(e?.message||String(e),false)}
+}
+function scheduleCloudSync(){
+  if(!supabaseClient||!cloudUser)return;
+  clearTimeout(cloudTimer);
+  cloudTimer=setTimeout(function(){pushDatabase(true).catch(function(e){console.warn("Cloud sync:",e)})},1200);
+}
+\ndocument.querySelectorAll(".nav").forEach(x=>x.onclick=()=>go(x.dataset.page));
 $("menuBtn").onclick=()=>document.querySelector(".sidebar").classList.toggle("open");
-function start(){renderAll();go("dashboard")}
+async function start(){
+  renderAll();
+  loadCloudConfig();
+  if($("connectDatabase"))$("connectDatabase").onclick=connectDatabase;
+  if($("syncDatabase"))$("syncDatabase").onclick=syncDatabase;
+  go("dashboard");
+  const cfg=JSON.parse(localStorage.getItem(CLOUD_CFG)||"null");
+  if(cfg?.key){setCloudStatus("Connecting…",false);await connectDatabase()}
+}
 start();
