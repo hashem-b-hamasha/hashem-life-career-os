@@ -35,7 +35,7 @@
 <div id="appShell" class="app-shell locked">
 <aside class="sidebar">
   <div class="brand">H<span>•</span>OS</div>
-  <div class="user-box"><b>Hashem</b><small>Local Mode · بياناتك محفوظة على هذا الجهاز</small></div>
+  <div class="user-box"><b id="userName">Hashem</b><small id="userAccountStatus">Cloud Account</small></div>
   <nav>
     <button class="nav active" data-page="dashboard">⌂ <span>الرئيسية</span></button>
     <button class="nav" data-page="daily">✓ <span>سجل اليوم</span></button>
@@ -152,7 +152,7 @@
 </section>
 
 <section id="settings" class="page">
- <div class="page-head"><div><span class="eyebrow">SETTINGS & BACKUP</span><h1>الإعدادات والنسخ الاحتياطي</h1><p>Local-first: كل بيانات النظام تعمل مباشرة من المتصفح، بدون Login أو Cloud.</p></div></div>
+ <div class="page-head"><div><span class="eyebrow">SETTINGS & BACKUP</span><h1>الإعدادات والنسخ الاحتياطي</h1><p>بياناتك محليًا + Cloud، والوصول الكامل يتطلب تسجيل الدخول بحسابك.</p></div></div>
  <div class="card"><h2>الفترة</h2><div class="two-cols"><label>البداية<input id="startDate" type="date"></label><label>النهاية<input id="endDate" type="date"></label></div><button class="primary" id="saveSettings">حفظ الفترة</button></div>
  <div class="card cloud-card">
     <div class="card-head">
