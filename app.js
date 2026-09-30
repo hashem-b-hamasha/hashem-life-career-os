@@ -81,22 +81,32 @@ const projectDetails=[
 const specAreas=["Backend Development","Frontend Development","Full Stack Development",".NET Development","React / Next.js","Database & Data Engineering","Software Architecture","Cloud & DevOps","Cyber Security","AI / Machine Learning","Mobile Development","UI/UX Development"];
 const careerItems=["CV احترافي","GitHub Profile مرتب","Portfolio قوي","LinkedIn احترافي","توثيق المشاريع","كتابة وصف قوي لكل مشروع","إبراز المهارات والتقنيات","تحديث مستمر"];
 const cvData={
- summary:"خريج Software Engineering من Jordan University of Science and Technology (JUST)، يبني أساسًا عمليًا قويًا في البرمجة وحل المشكلات وOOP وData Structures وDatabases وSoftware Architecture، مع خبرة مشاريع باستخدام C# وJava وJavaScript/TypeScript وReact/Next.js وSQL.",
- education:["Bachelor of Software Engineering — Jordan University of Science and Technology (JUST) — 2026"],
- skills:["C#","JavaScript","TypeScript","C++","Java","Python","HTML","CSS","React","Next.js","ASP.NET MVC","ASP.NET Core","Entity Framework","REST APIs","SQL Server","PostgreSQL","MySQL","Prisma","Git","GitHub","Tailwind CSS","OOP","Data Structures","Algorithms","SOLID","UML","Software Architecture"],
- projects:[
-   ["Job Application Tracker","CRUD + APIs + database + testing + deployment"],
-   ["Customer Management","Next.js 16 + TypeScript + Prisma + PostgreSQL/Supabase"],
-   ["TREAQ","C# + ASP.NET MVC + Entity Framework + SQL Server"],
-   ["Campus Event System","Java Servlets + JSP + MySQL + MVC"],
-   ["Portfolio","React + TypeScript + Tailwind"],
-   ["PLUGIX","Next.js + TypeScript + Prisma + Auth + Admin + Store + Orders"],
-   ["Qareen","Next.js 16 + TypeScript + Prisma + PostgreSQL"]
+ summary:"Junior Software Engineer and Full Stack Developer with hands-on experience building web applications using ASP.NET MVC, ASP.NET Core, C#, SQL Server, React, TypeScript, Entity Framework, and RESTful APIs. Strong foundation in OOP, Data Structures, Algorithms, Database Design, Software Architecture, SDLC, Agile, testing, troubleshooting, and deployment.",
+ education:["Bachelor of Software Engineering — Jordan University of Science and Technology (JUST) — Irbid, Jordan — Graduated June 2026"],
+ skills:["C#","JavaScript","TypeScript","Java","C++","Python","React","Next.js","HTML5","CSS3","Tailwind CSS","Responsive Web Design","UI/UX Design","ASP.NET MVC","ASP.NET Core","Entity Framework","RESTful APIs","Authentication & Authorization","CRUD","LINQ","SQL Server","MySQL","PostgreSQL","Oracle Database","Database Design","OOP","Data Structures","Algorithms","SOLID","Design Patterns","MVC Architecture","Onion Architecture","Software Architecture","SDLC","Agile","Code Reviews","Git","GitHub","Postman","Visual Studio","VS Code","Figma","Netlify"],
+ experience:[
+   ["Software Engineering Trainee","Clever Mind POB ICT","Jul 2025 – Nov 2025","Software development, testing, QA, requirements validation, defect identification, Git/GitHub, Agile, SDLC, project planning and documentation."]
  ],
- certs:["Cisco CCNA: Introduction to Networks","Cisco Industrial Cybersecurity Essentials","Introduction to Modern AI","HTML5 Essentials","Meta Full Stack Developer — Coursera (in progress / completed modules)"]
+ projects:[
+   ["TREAQ — Pharmacy Management Platform","ASP.NET MVC, C#, Entity Framework, SQL Server, REST APIs, JavaScript, HTML5, CSS3, Git"],
+   ["Job Application Tracker","Backend + Frontend + Database + APIs + testing + deployment"],
+   ["Customer Management","Next.js 16 + TypeScript + Tailwind + Prisma + PostgreSQL/Supabase"],
+   ["Campus Event System","Java Servlets + JSP + MySQL + MVC"],
+   ["Personal Portfolio Website","React + TypeScript + Tailwind CSS + Framer Motion + GitHub + Netlify"],
+   ["PLUGIX","Next.js + TypeScript + Prisma + Auth + Admin + Store + Orders"],
+   ["Qareen","Next.js 16 + TypeScript + Tailwind + Prisma + PostgreSQL"]
+ ],
+ achievements:[
+   "Designed and implemented 4 RESTful APIs and multiple dashboard modules in TREAQ.",
+   "Built a full-stack pharmacy platform with authentication, authorization, inventory and operational workflows.",
+   "Reduced software bugs by 40% and improved application performance by 30% during testing, debugging and optimization activities.",
+   "Developed and deployed a professional responsive portfolio website.",
+   "Completed professional QA and Project Management training at Clever Mind POB ICT."
+ ],
+ certs:["Introduction to Front-End Development – Meta (Coursera)","CCNA: Introduction to Networks – Cisco Networking Academy","Introduction to Modern AI – Cisco Networking Academy","Industrial Cybersecurity Essentials – Cisco Networking Academy","HTML Essentials – Cisco & JS Institute","Discovering Entrepreneurship – Cisco Networking Academy","QA and PM For Mobile Apps and Websites For Developers – Clever Mind POB ICT (30 Hours)"]
 };
 
-function renderAll(){renderDashboard();renderPlan();renderEnglish();renderSoftware();renderProjects();renderSpecialization();renderCareer();renderReports();loadSettings();renderDaily();renderHealth()}
+function renderAll(){renderDashboard();renderPlan();renderEnglish();renderSoftware();renderProjects();renderSpecialization();renderCareer();renderCV();renderReports();loadSettings();renderDaily();renderHealth();renderLearningMethod()}
 function renderDashboard(){
  $("dashDate").textContent=new Date(selectedDate+"T12:00:00").toLocaleDateString("ar-JO",{weekday:"long",day:"numeric",month:"long"});
  const d=todayDay(), total=Object.values(d.hours).reduce((a,b)=>a+b,0);
@@ -169,6 +179,8 @@ function renderEnglish(){
     return '<div class="table-row"><b>'+escapeHtml(x.date)+'</b><span>'+escapeHtml(x.topic)+'</span><span class="badge">'+(Number(x.minutes)||0)+' min</span></div>';
   }).join("") || '<div class="empty">لا توجد جلسات بعد.</div>';
 }
+if($("downloadCV"))$("downloadCV").onclick=downloadCV;
+if($("printCV"))$("printCV").onclick=printCV;
 $("saveSpeaking").onclick=function(){
   if(!$("speakTopic").value.trim())return;
   state.english.speaking.unshift({date:today(),topic:$("speakTopic").value.trim(),minutes:Number($("speakMinutes").value)||0,notes:$("speakNotes").value.trim()});
@@ -202,14 +214,37 @@ function renderSpecialization(){ $("specAreas").innerHTML=specAreas.map(a=>`<div
 $("saveExp").onclick=()=>{state.specialization.experiments.unshift({date:today(),area:$("expArea").value,task:$("expTask").value,note:$("expNote").value});$("expTask").value="";$("expNote").value="";persist();renderSpecialization()}
 
 function renderCV(){
-  $("cvName").textContent=cvData.summary?state.profile.name:"Hashem Hamasha";
-  $("cvHeadline").textContent="Software Engineering Graduate · Junior Software Engineer";
+  if(!$("cvName"))return;
+  $("cvName").textContent=state.profile.name||"Hashem Hamasha";
+  $("cvHeadline").textContent="Junior Software Engineer · Full Stack Developer";
   $("cvSummary").textContent=cvData.summary;
   $("cvEducation").innerHTML=cvData.education.map(x=>"<p>"+escapeHtml(x)+"</p>").join("");
   $("cvSkills").innerHTML=cvData.skills.map(x=>"<span class='tag'>"+escapeHtml(x)+"</span>").join("");
+  $("cvExperience").innerHTML=cvData.experience.map(x=>"<div><b>"+escapeHtml(x[0])+"</b><span>"+escapeHtml(x[1])+" · "+escapeHtml(x[2])+"</span><p>"+escapeHtml(x[3])+"</p></div>").join("");
   $("cvProjects").innerHTML=cvData.projects.map(x=>"<div><b>"+escapeHtml(x[0])+"</b><span>"+escapeHtml(x[1])+"</span></div>").join("");
+  $("cvAchievements").innerHTML=cvData.achievements.map(x=>"<div>• "+escapeHtml(x)+"</div>").join("");
   $("cvCerts").innerHTML=cvData.certs.map(x=>"<div><b>"+escapeHtml(x)+"</b></div>").join("");
 }
+function cvPrintableHTML(){
+  const skills=cvData.skills.join(" · ");
+  const projects=cvData.projects.map(x=>"<p><b>"+escapeHtml(x[0])+"</b><br>"+escapeHtml(x[1])+"</p>").join("");
+  const experience=cvData.experience.map(x=>"<p><b>"+escapeHtml(x[0])+"</b> — "+escapeHtml(x[1])+"<br>"+escapeHtml(x[2])+"<br>"+escapeHtml(x[3])+"</p>").join("");
+  const achievements=cvData.achievements.map(x=>"<li>"+escapeHtml(x)+"</li>").join("");
+  const certs=cvData.certs.map(x=>"<li>"+escapeHtml(x)+"</li>").join("");
+  return "<!doctype html><html><head><meta charset='utf-8'><title>Hashem Hamasha CV</title><style>body{font-family:Arial,sans-serif;max-width:820px;margin:32px auto;color:#172033;line-height:1.45}h1{margin:0 0 4px}h2{font-size:15px;border-bottom:2px solid #172033;padding-bottom:4px;margin-top:20px}p{margin:6px 0;font-size:11px}.meta{font-size:10px;color:#475467}.skills{font-size:10px}.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}@media print{body{margin:0}}</style></head><body><h1>HASHEM BASHAR MOHAMMAD HAMASHA</h1><b>JUNIOR SOFTWARE ENGINEER | FULL STACK DEVELOPER</b><div class='meta'>00962-770276749 · hashembashahamasha@gmail.com · Amman, Jordan · https://hashem-hamasha.netlify.app</div><h2>PROFESSIONAL SUMMARY</h2><p>"+escapeHtml(cvData.summary)+"</p><h2>EXPERIENCE</h2>"+experience+"<h2>PROJECTS</h2>"+projects+"<h2>TECHNICAL SKILLS</h2><p class='skills'>"+escapeHtml(skills)+"</p><div class='two'><div><h2>EDUCATION</h2><p>"+escapeHtml(cvData.education[0])+"</p></div><div><h2>CERTIFICATIONS</h2><ul>"+certs+"</ul></div></div><h2>ACHIEVEMENTS</h2><ul>"+achievements+"</ul></body></html>";
+}
+function printCV(){
+  const w=window.open("","_blank","width=900,height=900");
+  if(!w)return;
+  w.document.write(cvPrintableHTML());
+  w.document.close();
+  setTimeout(()=>w.print(),400);
+}
+function downloadCV(){
+  // Browser-native print dialog lets the user choose "Save as PDF" without exposing private data to a third-party PDF service.
+  printCV();
+}
+
 function renderLearningMethod(){
   const el=$("learningMethod");
   if(!el)return;
