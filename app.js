@@ -265,7 +265,7 @@ async function afterAuth(user){
   cloudUser=user;
   showApp();
   try{await pullDatabase()}catch(e){setCloudStatus("Cloud Error",false);console.warn(e)}
-  if($("accountStatus"))$("accountStatus").textContent=user?.phone?"متصل: "+user.phone:"حساب متصل";
+  if($("accountStatus"))$("accountStatus").textContent=user?.phone?"متصل: "+user.phone:"حساب متصل";if($("userName"))$("userName").textContent=state.profile.name||"Hashem";if($("userAccountStatus"))$("userAccountStatus").textContent=user?.phone?"Cloud · "+user.phone:"Cloud Account";
 }
 async function submitAuth(){
   try{
