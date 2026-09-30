@@ -18,3 +18,18 @@
 .cloud-actions{justify-content:flex-start;gap:8px;align-items:center}
 .cloud-help{margin:10px 0 0;font-size:11px}
 .project-stack{line-height:1.5}
+
+.app-shell.locked{display:none}
+.auth-screen{direction:rtl}
+.auth-card small{display:block;line-height:1.6}
+.cv-hero{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
+.cv-hero h2{font-size:28px;margin:8px 0}
+.cv-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.cv-list{display:grid;gap:10px}
+.cv-list>div{padding:10px;border:1px solid #e6eaf0;border-radius:10px;background:#fafbfd}
+.cv-list b,.cv-list span{display:block}.cv-list span{color:#707b8d;font-size:12px;margin-top:4px}
+.tag-list{display:flex;flex-wrap:wrap;gap:7px}.tag{padding:6px 9px;background:#edf2f8;border-radius:999px;font-size:12px}
+.learning-flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 18px}.learning-flow b{padding:8px 10px;background:#111827;color:#fff;border-radius:9px}.learning-flow span{font-size:12px;color:#6d7788;margin-left:4px}
+#learningMethod ul{margin:0;padding-right:20px;line-height:2}
+.account-card{border:1px solid #cfe0ff}
+@media(max-width:800px){.cv-grid{grid-template-columns:1fr}.cv-hero{flex-direction:column}}
