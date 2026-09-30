@@ -21,8 +21,8 @@
       <small class="muted">أول مرة فقط: الصق Publishable Key من Supabase → Settings → API Keys.</small>
     </div>
     <input id="authPhone" type="tel" inputmode="tel" placeholder="رقم الهاتف بصيغة دولية مثل +9627..." autocomplete="tel">
-    <input id="authPassword" type="password" placeholder="كلمة المرور (8 أحرف أو أكثر)" autocomplete="current-password">
-    <input id="authPassword2" type="password" placeholder="تأكيد كلمة المرور" autocomplete="new-password" style="display:none">
+    <input id="authPassword" type="password" value="2003" readonly autocomplete="off" aria-label="الرقم السري الثابت">
+    <small class="muted">الرقم السري ثابت لهذا النظام ولا يمكن تغييره من الموقع.</small>
     <button id="authSubmit" class="primary" type="button">دخول</button>
     <div id="otpBox" style="display:none">
       <input id="authOtp" inputmode="numeric" maxlength="6" placeholder="رمز SMS المكوّن من 6 أرقام">
