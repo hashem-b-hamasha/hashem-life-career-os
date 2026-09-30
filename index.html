@@ -111,8 +111,25 @@
 <section id="settings" class="page">
  <div class="page-head"><div><span class="eyebrow">SETTINGS & BACKUP</span><h1>الإعدادات والنسخ الاحتياطي</h1><p>Local-first: كل بيانات النظام تعمل مباشرة من المتصفح، بدون Login أو Cloud.</p></div></div>
  <div class="card"><h2>الفترة</h2><div class="two-cols"><label>البداية<input id="startDate" type="date"></label><label>النهاية<input id="endDate" type="date"></label></div><button class="primary" id="saveSettings">حفظ الفترة</button></div>
- <div class="card"><h2>💾 Backup</h2><p class="muted">حتى مع Cloud، احتفظ بنسخة JSON دورية.</p><button class="primary" id="exportData">Export JSON</button><label class="file-upload">Import JSON<input id="importData" type="file" accept=".json"></label><button class="danger" id="resetData">حذف البيانات المحلية</button></div>
+ <div class="card cloud-card">
+    <div class="card-head">
+      <div><h2>☁️ قاعدة البيانات — Supabase</h2><small>بدون Login ظاهر؛ التطبيق يستخدم Anonymous Session خلف الكواليس.</small></div>
+      <span id="cloudStatus" class="badge">Local</span>
+    </div>
+    <div class="two-cols">
+      <label>Project URL<input id="cloudUrl" value="https://lepffckwdmrcckxnnfdx.supabase.co" readonly></label>
+      <label>Publishable Key<input id="cloudKey" type="password" placeholder="sb_publishable_..."></label>
+    </div>
+    <div class="row cloud-actions">
+      <button class="primary" id="connectDatabase">ربط قاعدة البيانات</button>
+      <button class="secondary" id="syncDatabase">مزامنة الآن</button>
+    </div>
+    <div id="cloudMessage" class="msg"></div>
+    <p class="muted cloud-help">المفتاح المطلوب هو Publishable Key فقط، وليس Secret / Service Role.</p>
+  </div>
+  <div class="card"><h2>💾 Backup</h2><p class="muted">حتى مع Cloud، احتفظ بنسخة JSON دورية.</p><button class="primary" id="exportData">Export JSON</button><label class="file-upload">Import JSON<input id="importData" type="file" accept=".json"></label><button class="danger" id="resetData">حذف البيانات المحلية</button></div>
 </section>
 </main></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"></script>
 <script src="app.js"></script>
 </body></html>
