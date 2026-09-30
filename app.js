@@ -92,7 +92,7 @@ async function pushCloud(){if(!sb||!session){$("cloudMsg").textContent="سجّل
 let cloudTimer=null;function autoCloud(){if(sb&&session){clearTimeout(cloudTimer);cloudTimer=setTimeout(pushCloud,1200)}}
 function showAuth(){$("authScreen").classList.remove("hidden")}
 function hideAuth(){$("authScreen").classList.add("hidden")}
-function updateUser(){let email=session?.user?.email;$("userName").textContent=email||"Hashem";$("syncStatus").textContent=session?"☁️ Cloud Connected":"💾 Local Mode"}
+function updateUser(){let email=session?.user?.email;$("userName").textContent=email||"Hashem";$("syncStatus").textContent=session?"☁️ Cloud Connected":"💾 Local Mode";if($("signOut"))$("signOut").classList.toggle("hidden",!session)}
 $("connectCloud").onclick=async()=>{await connectCloud();await initCloud();showAuth()}
 $("cloudLogin").onclick=async()=>{await connectCloud();await initCloud();showAuth()}
 $("saveAuthConfig").onclick=async()=>{await connectCloud();await initCloud()}
