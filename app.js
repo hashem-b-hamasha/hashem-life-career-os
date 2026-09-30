@@ -259,83 +259,117 @@ function renderReports(){let entries=Object.entries(state.days),hours=entries.re
 function weekKey(){let d=new Date(),one=new Date(d.getFullYear(),0,1);return "w"+Math.ceil((((d-one)/86400000)+one.getDay()+1)/7)}
 $("saveReview").onclick=()=>{state.reviews[weekKey()]={win:$("reviewWin").value,block:$("reviewBlock").value,next:$("reviewNext").value};persist();renderReports()}
 
-function loadSettings(){$("startDate").value=state.settings.start;$("endDate").value=state.settings.end}
+function loadSettings(){$("startDate").value=state.settings.start;$("endDate").value=state.settings.end;loadCloudConfig()}
 $("saveSettings").onclick=()=>{state.settings.start=$("startDate").value;state.settings.end=$("endDate").value;persist();alert("تم حفظ الفترة")}
 function exportData(){let blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="hashem-life-os-backup-"+today()+".json";a.click()}
 $("exportData").onclick=exportData;
 $("importData").onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{state=JSON.parse(r.result);persist();alert("تم استرجاع النسخة")}catch{alert("الملف غير صالح")}};r.readAsText(f)}
-$("resetData").onclick=()=>{if(confirm("حذف البيانات المحلية؟ احتفظ بنسخة Export أولًا.")){localStorage.removeItem(LS);location.reload()}}
+$("resetData").onclick=()=>{if(confirm("سيتم حذف بيانات هذا المتصفح فقط. نسخة Cloud لن تُحذف. احتفظ بنسخة Export أولًا. هل تريد المتابعة؟")){localStorage.removeItem(LS);localStorage.removeItem("hashem_life_os_unlocked");location.reload()}}
 
 
 
-const CLOUD_CFG="hashem_supabase_cloud_v2";
 const FIXED_PASSWORD=["20","03"].join("");
+const CLOUD_CFG="hashem_supabase_cloud_v3";
 const SUPABASE_URL="https://lepffckwdmrcckxnnfdx.supabase.co";
-let supabaseClient=null, cloudUser=null, cloudTimer=null, pendingPhone=null, pendingPassword=null;
+let supabaseClient=null, cloudUser=null, cloudTimer=null;
 
 function setCloudStatus(label,ok){const el=$("cloudStatus");if(el){el.textContent=label;el.className="badge "+(ok?"good":"")}}
 function cloudMessage(msg,good){const el=$("cloudMessage");if(el){el.textContent=msg;el.style.color=good?"#237a42":"#b42318"}}
 function authMessage(msg,good=false){const el=$("authMessage");if(el){el.textContent=msg;el.style.color=good?"#237a42":"#b42318"}}
 function saveCloudKey(key){if(key)localStorage.setItem(CLOUD_CFG,JSON.stringify({url:SUPABASE_URL,key:key}))}
-function loadCloudConfig(){let cfg=JSON.parse(localStorage.getItem(CLOUD_CFG)||"null");if(!cfg?.key){const old=JSON.parse(localStorage.getItem("hashem_supabase_cloud_v1")||localStorage.getItem("hashem_supabase_config_v1")||"null");if(old?.key){cfg={url:SUPABASE_URL,key:old.key};saveCloudKey(old.key)}}if(cfg?.key){if($("cloudKey"))$("cloudKey").value=cfg.key;if($("authCloudKey"))$("authCloudKey").value=cfg.key}return cfg}
-function initSupabase(){if(!window.supabase?.createClient)throw new Error("Supabase SDK لم تُحمّل. حدّث الصفحة.");const cfg=loadCloudConfig();if(!cfg?.key)throw new Error("أدخل Publishable Key أولًا.");supabaseClient=window.supabase.createClient(SUPABASE_URL,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});return supabaseClient}
-function showApp(){ $("authGate")?.classList.add("hidden");$("appShell")?.classList.remove("locked");renderAll();go("dashboard");}
-function showAuth(){ $("authGate")?.classList.remove("hidden");$("appShell")?.classList.add("locked");}
-function unlockApp(){
-  const value=$("authPassword")?.value||"";
-  if(value===FIXED_PASSWORD){
-    localStorage.setItem("hashem_life_os_unlocked","1");
-    showApp();
-    $("authMessage").textContent="";
+function loadCloudConfig(){
+  try{
+    let cfg=JSON.parse(localStorage.getItem(CLOUD_CFG)||"null");
+    if(!cfg?.key){
+      const old=JSON.parse(localStorage.getItem("hashem_supabase_cloud_v2")||localStorage.getItem("hashem_supabase_cloud_v1")||localStorage.getItem("hashem_supabase_config_v1")||"null");
+      if(old?.key){cfg={url:SUPABASE_URL,key:old.key};saveCloudKey(old.key)}
+    }
+    if(cfg?.key&&$("cloudKey"))$("cloudKey").value=cfg.key;
+    return cfg;
+  }catch{return null}
+}
+function initSupabase(){
+  if(!window.supabase?.createClient)throw new Error("Supabase SDK لم تُحمّل. حدّث الصفحة.");
+  const cfg=loadCloudConfig();
+  if(!cfg?.key)throw new Error("أدخل Publishable Key أولًا.");
+  if(!supabaseClient)supabaseClient=window.supabase.createClient(SUPABASE_URL,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+  return supabaseClient;
+}
+async function ensureCloudSession(){
+  initSupabase();
+  let {data,error}=await supabaseClient.auth.getSession();
+  if(error)throw error;
+  if(!data.session){
+    const result=await supabaseClient.auth.signInAnonymously();
+    if(result.error)throw result.error;
+    data={session:result.data.session};
+  }
+  if(!data.session?.user)throw new Error("تعذر إنشاء جلسة Cloud.");
+  cloudUser=data.session.user;
+  return data.session;
+}
+async function afterAuth(user){
+  cloudUser=user;
+  if($("accountStatus"))$("accountStatus").textContent="Anonymous Cloud Session — متصل";
+  if($("userAccountStatus"))$("userAccountStatus").textContent="Cloud Connected";
+  setCloudStatus("Cloud Connected",true);
+  const {data,error}=await supabaseClient.from("user_dashboard_data").select("payload,updated_at").eq("user_id",user.id).maybeSingle();
+  if(error)throw error;
+  if(data?.payload){
+    state=mergeDeep(defaultState(),data.payload);
+    localStorage.setItem(LS,JSON.stringify(state));
+    renderAll();
+    cloudMessage("تم تحميل بياناتك من Cloud ✓",true);
   }else{
-    authMessage("الرقم السري غير صحيح.");
+    await pushDatabase(true);
+    cloudMessage("تم إنشاء نسخة Cloud لبياناتك ✓",true);
   }
 }
-async function submitAuth(){
-  try{
-    // The key is entered on the auth screen, so save it before creating the client.
-    const enteredKey=$("authCloudKey")?.value?.trim();
-    if(enteredKey)saveCloudKey(enteredKey);
-    initSupabase();
-    const phone=normalizePhone($("authPhone").value),password=FIXED_PASSWORD;
-    if(!/^\+[1-9]\d{7,14}$/.test(phone))throw new Error("اكتب رقم الهاتف بصيغة دولية مثل +9627xxxxxxxx.");
-    if(window.authMode==="signup"){
-      const {data,error}=await supabaseClient.auth.signUp({phone,password});
-      if(error)throw error;
-      pendingPhone=phone;pendingPassword=password;
-      if(data.session){cloudUser=data.user;await pushDatabase(true);authMessage("تم إنشاء الحساب وحفظ بياناتك ✓",true);await afterAuth(data.user)}
-      else{$("otpBox").style.display="block";authMessage("تم إرسال رمز التحقق إلى هاتفك. أدخل الـOTP.",true)}
-    }else{
-      const {data,error}=await supabaseClient.auth.signInWithPassword({phone,password});
-      if(error)throw error;
-      await afterAuth(data.user);
-    }
-  }catch(e){authMessage(e?.message||String(e),false)}
+async function pushDatabase(force=false){
+  if(!supabaseClient||!cloudUser)return false;
+  const payload=JSON.parse(JSON.stringify(state));
+  const {error}=await supabaseClient.from("user_dashboard_data").upsert({user_id:cloudUser.id,payload:payload,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+  if(error)throw error;
+  setCloudStatus("Cloud Synced",true);
+  if(force)cloudMessage("تم حفظ بياناتك في Cloud ✓",true);
+  return true;
 }
-async function verifyPhoneOtp(){
-  try{
-    initSupabase();
-    const phone=pendingPhone||normalizePhone($("authPhone").value),token=$("authOtp").value.trim();
-    if(!/^\d{6}$/.test(token))throw new Error("أدخل رمزًا من 6 أرقام.");
-    const {data,error}=await supabaseClient.auth.verifyOtp({phone,token,type:"sms"});
-    if(error)throw error;
-    if(data.session?.user){cloudUser=data.session.user;await pushDatabase(true);$("otpBox").style.display="none";await afterAuth(data.session.user);authMessage("تم تأكيد الرقم والدخول ✓",true)}
-  }catch(e){authMessage(e?.message||String(e),false)}
+function scheduleCloudSync(){
+  if(!supabaseClient||!cloudUser)return;
+  clearTimeout(cloudTimer);
+  cloudTimer=setTimeout(async()=>{
+    try{await pushDatabase(false)}
+    catch(e){console.error("Cloud sync error:",e);cloudMessage("تعذر مزامنة آخر تغيير: "+(e?.message||String(e)),false);setCloudStatus("Sync Error",false)}
+  },700);
 }
-async function signOut(){
-  if(!supabaseClient)try{initSupabase()}catch{}
-  if(supabaseClient)await supabaseClient.auth.signOut();
-  cloudUser=null;showAuth();authMessage("تم تسجيل الخروج.");setCloudStatus("Local",false)
+function showApp(){$("authGate")?.classList.add("hidden");$("appShell")?.classList.remove("locked");renderAll();go("dashboard")}
+function showAuth(){$("authGate")?.classList.remove("hidden");$("appShell")?.classList.add("locked")}
+function unlockApp(){
+  const value=$("authPassword")?.value||"";
+  if(value===FIXED_PASSWORD){localStorage.setItem("hashem_life_os_unlocked","1");showApp();$("authMessage").textContent=""}
+  else authMessage("الرقم السري غير صحيح.");
 }
 async function connectDatabase(){
-  try{
-    initSupabase();
-    const session=(await supabaseClient.auth.getSession()).data.session;
-    if(!session){setCloudStatus("Login Required",false);cloudMessage("سجّل الدخول من شاشة الحساب أولًا.",false);showAuth();return false}
-    await afterAuth(session.user);setCloudStatus("Cloud Connected",true);cloudMessage("تم الاتصال ✓",true);return true;
-  }catch(e){setCloudStatus("Cloud Error",false);cloudMessage(e?.message||String(e),false);return false}
+  try{const session=await ensureCloudSession();await afterAuth(session.user);return true}
+  catch(e){cloudUser=null;setCloudStatus("Cloud Error",false);cloudMessage(e?.message||String(e),false);return false}
 }
-async function syncDatabase(){try{if(!supabaseClient||!cloudUser){const ok=await connectDatabase();if(!ok)return}else await pushDatabase(false)}catch(e){cloudMessage(e?.message||String(e),false)}}
+async function syncDatabase(){
+  try{
+    if(!supabaseClient||!cloudUser){const ok=await connectDatabase();if(!ok)return}
+    else await pushDatabase(true);
+  }catch(e){cloudMessage(e?.message||String(e),false);setCloudStatus("Sync Error",false)}
+}
+async function signOut(){
+  if(!supabaseClient){try{initSupabase()}catch{}}
+  if(!supabaseClient){setCloudStatus("Local",false);return}
+  if(!confirm("فصل جلسة Cloud سيمنعك من استعادة نفس Anonymous Session لاحقًا. هل تريد المتابعة؟"))return;
+  try{await supabaseClient.auth.signOut()}catch{}
+  cloudUser=null;
+  setCloudStatus("Local",false);
+  if($("accountStatus"))$("accountStatus").textContent="غير متصل — Local فقط";
+  if($("userAccountStatus"))$("userAccountStatus").textContent="Local Mode";
+  cloudMessage("تم فصل جلسة Cloud. بياناتك المحلية بقيت كما هي.",true);
+}
 
 document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>go(x.dataset.page));
 $("menuBtn").onclick=()=>document.querySelector(".sidebar").classList.toggle("open");
