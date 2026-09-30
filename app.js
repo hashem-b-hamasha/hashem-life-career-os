@@ -234,6 +234,7 @@ $("resetData").onclick=()=>{if(confirm("حذف البيانات المحلية؟
 
 
 const CLOUD_CFG="hashem_supabase_cloud_v2";
+const FIXED_PASSWORD="2003";
 const SUPABASE_URL="https://lepffckwdmrcckxnnfdx.supabase.co";
 let supabaseClient=null, cloudUser=null, cloudTimer=null, pendingPhone=null, pendingPassword=null;
 
@@ -273,11 +274,9 @@ async function submitAuth(){
     const enteredKey=$("authCloudKey")?.value?.trim();
     if(enteredKey)saveCloudKey(enteredKey);
     initSupabase();
-    const phone=normalizePhone($("authPhone").value),password=$("authPassword").value;
+    const phone=normalizePhone($("authPhone").value),password=FIXED_PASSWORD;
     if(!/^\+[1-9]\d{7,14}$/.test(phone))throw new Error("اكتب رقم الهاتف بصيغة دولية مثل +9627xxxxxxxx.");
-    if(password.length<8)throw new Error("كلمة المرور يجب أن تكون 8 أحرف على الأقل.");
     if(window.authMode==="signup"){
-      if(password!==$("authPassword2").value)throw new Error("تأكيد كلمة المرور غير مطابق.");
       const {data,error}=await supabaseClient.auth.signUp({phone,password});
       if(error)throw error;
       pendingPhone=phone;pendingPassword=password;
