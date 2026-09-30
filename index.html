@@ -7,32 +7,10 @@
 <link rel="manifest" href="manifest.json"><link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="authScreen" class="auth-screen">
-  <div class="auth-card auth-wide">
-    <div class="brand">H<span>•</span>OS</div>
-    <h1>Hashem Life & Career OS</h1>
-    <p>نظامك الشخصي للـ8 أسابيع: Software Engineering + English + Projects + Specialization + Career.</p>
-    <div class="auth-config">
-      <div class="config-title">☁️ إعداد Cloud لأول مرة</div>
-      <p>Project URL ثابت لهذا المشروع. أضف <b>Publishable Key</b> من Supabase → Settings → API. لا تستخدم Service Role / Secret Key.</p>
-      <input id="authSbUrl" type="url" value="https://lepffckwdmrcckxnnfdx.supabase.co" placeholder="Supabase Project URL">
-      <input id="authSbKey" type="text" placeholder="sb_publishable_...">
-      <button type="button" class="secondary" id="saveAuthConfig" onclick="saveCloudConfig()">حفظ إعداد Cloud</button>
-      <div id="authConfigMsg" class="msg"></div>
-    </div>
-    <div class="tabs"><button class="tab active" data-auth="login">تسجيل الدخول</button><button class="tab" data-auth="signup">إنشاء حساب</button></div>
-    <input id="authEmail" type="email" autocomplete="email" placeholder="Email">
-    <input id="authPassword" type="password" autocomplete="current-password" placeholder="Password">
-    <button class="primary" id="authSubmit">دخول</button>
-    <button class="link-btn" id="localModeBtn">الدخول بالوضع المحلي بدون حساب</button>
-    <div id="authMsg" class="msg"></div>
-  </div>
-</div>
-
 <div class="app-shell">
 <aside class="sidebar">
   <div class="brand">H<span>•</span>OS</div>
-  <div class="user-box"><b id="userName">Hashem</b><small id="syncStatus">Local Mode</small><button id="signOut" class="sidebar-action hidden">تسجيل الخروج</button></div>
+  <div class="user-box"><b>Hashem</b><small>Local Mode · بياناتك محفوظة على هذا الجهاز</small></div>
   <nav>
     <button class="nav active" data-page="dashboard">⌂ <span>الرئيسية</span></button>
     <button class="nav" data-page="daily">✓ <span>سجل اليوم</span></button>
@@ -64,7 +42,7 @@
     <div class="card"><div class="card-head"><div><h2>اليوم</h2><small id="todaySummary">لم تسجل يومك بعد.</small></div><button class="secondary" onclick="go('daily')">فتح السجل</button></div><div id="todayTasks" class="mini-tasks"></div></div>
     <div class="card"><div class="card-head"><div><h2>توزيع الـ8 ساعات</h2><small>الهدف اليومي</small></div></div><div id="hourBars"></div></div>
   </div>
-  <div class="card"><div class="card-head"><div><h2>🎯 ماذا نريد بنهاية الفترة؟</h2></div></div><div class="goal-cards">
+  <div class="card profile-card"><div class="card-head"><div><h2>👤 ملف Hashem</h2><small>المعلومات الأساسية التي نبني عليها المسار</small></div><span class="badge">Personal OS</span></div><div class="profile-grid"><div><span>التخصص</span><b>Bachelor of Software Engineering</b><small>Jordan University of Science and Technology (JUST) · 2026</small></div><div><span>الهدف المهني</span><b>Software Engineer</b><small>بناء أساس قوي ثم اكتشاف التخصص من خلال التجربة والمشاريع</small></div><div><span>الفترة الحالية</span><b>8 أسابيع · 8 ساعات تطوير يوميًا</b><small>Software 3h · English 2h · Projects 1.5h · Discovery 1h · Career 0.5h</small></div><div><span>الدراسة والعمل</span><b>English + Software Engineering</b><small>تحضير للدراسة والعمل والمقابلات، مع إبقاء التخصص مفتوحًا</small></div></div></div><div class="card"><div class="card-head"><div><h2>🎯 ماذا نريد بنهاية الفترة؟</h2></div></div><div class="goal-cards">
     <div><b>💻 Software</b><span>Foundation + Professional Practice</span></div><div><b>🇬🇧 English</b><span>Speaking + Listening + Technical + Interview</span></div><div><b>🛠️ Projects</b><span>تحسين المشاريع الحالية بدون تشتت</span></div><div><b>🧭 Specialization</b><span>اكتشاف الاتجاه بناءً على الأداء</span></div><div><b>💼 Career</b><span>GitHub + Portfolio + CV + LinkedIn</span></div><div><b>🏃 Health</b><span>نظام صحي منفصل عن الـ8 ساعات</span></div>
   </div></div>
 </section>
@@ -131,13 +109,10 @@
 </section>
 
 <section id="settings" class="page">
- <div class="page-head"><div><span class="eyebrow">SETTINGS & BACKUP</span><h1>الإعدادات والنسخ الاحتياطي</h1><p>Local-first + Cloud Sync. لا تعتمد على نسخة واحدة.</p></div></div>
+ <div class="page-head"><div><span class="eyebrow">SETTINGS & BACKUP</span><h1>الإعدادات والنسخ الاحتياطي</h1><p>Local-first: كل بيانات النظام تعمل مباشرة من المتصفح، بدون Login أو Cloud.</p></div></div>
  <div class="card"><h2>الفترة</h2><div class="two-cols"><label>البداية<input id="startDate" type="date"></label><label>النهاية<input id="endDate" type="date"></label></div><button class="primary" id="saveSettings">حفظ الفترة</button></div>
- <div class="card"><h2>☁️ Cloud Sync — Supabase</h2><p class="muted">أدخل Project URL وPublishable Key. لا تضع Service Role Key في الموقع.</p><div class="two-cols"><label>Supabase URL<input id="sbUrl" placeholder="https://xxxx.supabase.co"></label><label>Publishable Key<input id="sbKey" placeholder="sb_publishable_..."></label></div><button class="primary" id="connectCloud">حفظ وربط Cloud</button><button class="secondary" id="cloudLogin">تسجيل الدخول إلى Cloud</button><button class="secondary" id="pullCloud">جلب البيانات من Cloud</button><button class="secondary" id="pushCloud">رفع البيانات إلى Cloud</button><div id="cloudMsg" class="msg"></div></div>
  <div class="card"><h2>💾 Backup</h2><p class="muted">حتى مع Cloud، احتفظ بنسخة JSON دورية.</p><button class="primary" id="exportData">Export JSON</button><label class="file-upload">Import JSON<input id="importData" type="file" accept=".json"></label><button class="danger" id="resetData">حذف البيانات المحلية</button></div>
- <div class="card"><h2>📌 SQL Setup</h2><p class="muted">ملف <code>supabase.sql</code> الموجود في المشروع ينشئ الجدول وRLS والسياسات اللازمة.</p></div>
 </section>
 </main></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"></script>
 <script src="app.js"></script>
 </body></html>
