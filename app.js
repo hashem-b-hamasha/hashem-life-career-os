@@ -434,15 +434,56 @@ function unlockApp(){
 async function connectDatabase(){
   try{
     const enteredKey=$("cloudKey")?.value?.trim();
-    if(enteredKey){
-      saveCloudKey(enteredKey);
-      supabaseClient=null;
-      cloudUser=null;
+    if(!enteredKey)throw new Error("أدخل Publishable Key أولًا.");
+
+    saveCloudKey(enteredKey);
+    supabaseClient=null;
+    cloudUser=null;
+
+    // Step 1: verify that the browser can actually reach the Supabase Auth API.
+    let response;
+    try{
+      response=await fetch(SUPABASE_URL+"/auth/v1/settings",{
+        method:"GET",
+        headers:{apikey:enteredKey}
+      });
+    }catch(e){
+      throw new Error("المتصفح لا يستطيع الوصول إلى Supabase Auth. افحص الاتصال بالإنترنت، AdBlock/Privacy extensions، أو حالة مشروع Supabase. التفاصيل: "+(e?.message||String(e)));
     }
-    const session=await ensureCloudSession();
-    await afterAuth(session.user);
+
+    if(!response.ok){
+      let body="";
+      try{body=await response.text()}catch{}
+      if(response.status===401||response.status===403){
+        throw new Error("Publishable Key غير صالح أو غير صحيح لهذا المشروع. تأكد أنك نسخت المفتاح من Supabase → Settings → API Keys.");
+      }
+      throw new Error("Supabase Auth أعاد HTTP "+response.status+(body?" — "+body.slice(0,180):""));
+    }
+
+    // Step 2: create/restore the anonymous authenticated session.
+    let session;
+    try{
+      session=await ensureCloudSession();
+    }catch(e){
+      const msg=e?.message||String(e);
+      if(/anonymous|sign.?in|signup|not enabled|disabled/i.test(msg)){
+        throw new Error("الاتصال بـSupabase يعمل، لكن Anonymous Sign-Ins غير مفعّلة في المشروع. فعّلها من Supabase → Authentication → Providers/Sign In → Anonymous Sign-Ins.");
+      }
+      throw new Error("اتصال Supabase نجح، لكن إنشاء Anonymous Session فشل: "+msg);
+    }
+
+    // Step 3: read/write the user's Cloud row.
+    try{
+      await afterAuth(session.user);
+    }catch(e){
+      throw new Error("تم إنشاء Cloud Session بنجاح، لكن الوصول إلى جدول user_dashboard_data فشل: "+(e?.message||String(e))+" — تأكد من تشغيل supabase.sql ومن RLS/Data API.");
+    }
+
+    setCloudStatus("Cloud Connected",true);
+    cloudMessage("تم ربط Supabase ومزامنة بياناتك ✓",true);
     return true;
   }catch(e){
+    console.error("Cloud connection error:",e);
     cloudUser=null;
     setCloudStatus("Cloud Error",false);
     cloudMessage(e?.message||String(e),false);
