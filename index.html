@@ -7,7 +7,32 @@
 <link rel="manifest" href="manifest.json"><link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="app-shell">
+<div id="authGate" class="auth-screen">
+  <div class="auth-card">
+    <div class="brand">H<span>•</span>OS</div>
+    <h1>Hashem Life & Career OS</h1>
+    <p>الدخول محفوظ على حسابك حتى تقدر تكمل خطتك من أي جهاز.</p>
+    <div class="tabs">
+      <button id="loginTab" class="tab active" type="button">تسجيل الدخول</button>
+      <button id="signupTab" class="tab" type="button">إنشاء حساب</button>
+    </div>
+    <div id="authKeyBox">
+      <input id="authCloudKey" type="password" placeholder="Supabase Publishable Key">
+      <small class="muted">أول مرة فقط: الصق Publishable Key من Supabase → Settings → API Keys.</small>
+    </div>
+    <input id="authPhone" type="tel" inputmode="tel" placeholder="رقم الهاتف بصيغة دولية مثل +9627..." autocomplete="tel">
+    <input id="authPassword" type="password" placeholder="كلمة المرور (8 أحرف أو أكثر)" autocomplete="current-password">
+    <input id="authPassword2" type="password" placeholder="تأكيد كلمة المرور" autocomplete="new-password" style="display:none">
+    <button id="authSubmit" class="primary" type="button">دخول</button>
+    <div id="otpBox" style="display:none">
+      <input id="authOtp" inputmode="numeric" maxlength="6" placeholder="رمز SMS المكوّن من 6 أرقام">
+      <button id="verifyOtp" class="primary" type="button">تأكيد الرقم</button>
+    </div>
+    <div id="authMessage" class="msg"></div>
+    <small class="muted">لن يتم تخزين كلمة المرور داخل LocalStorage؛ Supabase Auth يديرها.</small>
+  </div>
+</div>
+<div id="appShell" class="app-shell locked">
 <aside class="sidebar">
   <div class="brand">H<span>•</span>OS</div>
   <div class="user-box"><b>Hashem</b><small>Local Mode · بياناتك محفوظة على هذا الجهاز</small></div>
@@ -20,6 +45,7 @@
     <button class="nav" data-page="projects">🛠️ <span>Projects</span></button>
     <button class="nav" data-page="specialization">🧭 <span>Specialization</span></button>
     <button class="nav" data-page="career">💼 <span>Career</span></button>
+    <button class="nav" data-page="cv">📄 <span>السيرة الذاتية</span></button>
     <button class="nav" data-page="health">🏃 <span>Health</span></button>
     <button class="nav" data-page="reports">📊 <span>Reports</span></button>
     <button class="nav" data-page="settings">⚙️ <span>Settings & Backup</span></button>
@@ -77,6 +103,7 @@
 <section id="software" class="page">
  <div class="page-head"><div><span class="eyebrow">SOFTWARE ENGINEERING</span><h1>Software Engineering</h1><p>مساران: Foundation ثم Professional Practice.</p></div></div>
  <div id="softwareTracks" class="track-grid"></div>
+ <div class="card"><div class="card-head"><div><h2>🧠 كيف لازم تتعلم؟</h2><small>نفس المنهج في كل موضوع</small></div></div><div id="learningMethod"></div></div>
 </section>
 
 <section id="projects" class="page">
@@ -93,6 +120,22 @@
 <section id="career" class="page">
  <div class="page-head"><div><span class="eyebrow">CAREER</span><h1>Career & Personal Branding</h1><p>نرتب الهوية المهنية بعد أن يتضح الاتجاه.</p></div></div>
  <div id="careerItems" class="career-list"></div>
+</section>
+
+<section id="cv" class="page">
+ <div class="page-head"><div><span class="eyebrow">CV / RESUME</span><h1>السيرة الذاتية 📄</h1><p>نسخة العمل الحالية من الـCV: نحدّثها مع كل مشروع ومهارة جديدة.</p></div></div>
+ <div class="card cv-hero"><div><span class="eyebrow">PROFESSIONAL PROFILE</span><h2 id="cvName">Hashem Hamasha</h2><p id="cvHeadline">Software Engineering Graduate · Software Engineer Track</p><p id="cvSummary"></p></div><span class="badge">ATS-ready structure</span></div>
+ <div class="cv-grid">
+   <div class="card"><h2>🎓 Education</h2><div id="cvEducation"></div></div>
+   <div class="card"><h2>💻 Technical Skills</h2><div id="cvSkills" class="tag-list"></div></div>
+   <div class="card"><h2>🛠️ Projects</h2><div id="cvProjects" class="cv-list"></div></div>
+   <div class="card"><h2>📚 Courses & Certificates</h2><div id="cvCerts" class="cv-list"></div></div>
+ </div>
+ <div class="card"><h2>🎯 CV Strategy</h2><div class="goal-cards">
+   <div><b>Junior Software Engineer</b><span>نركز على engineering fundamentals، المشاريع، GitHub، APIs، databases، testing.</span></div>
+   <div><b>Project Evidence</b><span>كل مشروع يجب أن يثبت مشكلة + architecture + implementation + testing + deployment.</span></div>
+   <div><b>ATS Keywords</b><span>C#, JavaScript, TypeScript, React, Next.js, SQL, REST APIs, Git, Docker, Testing, SOLID.</span></div>
+ </div></div>
 </section>
 
 <section id="health" class="page">
@@ -127,7 +170,8 @@
     <div id="cloudMessage" class="msg"></div>
     <p class="muted cloud-help">المفتاح المطلوب هو Publishable Key فقط، وليس Secret / Service Role.</p>
   </div>
-  <div class="card"><h2>💾 Backup</h2><p class="muted">حتى مع Cloud، احتفظ بنسخة JSON دورية.</p><button class="primary" id="exportData">Export JSON</button><label class="file-upload">Import JSON<input id="importData" type="file" accept=".json"></label><button class="danger" id="resetData">حذف البيانات المحلية</button></div>
+  <div class="card account-card"><div class="card-head"><div><h2>🔐 الحساب</h2><small id="accountStatus">غير متصل</small></div><button class="danger" id="signOut" type="button">تسجيل الخروج</button></div><p class="muted">الحساب يستخدم رقم الهاتف + كلمة المرور. كلمة المرور لا تُحفظ في LocalStorage.</p></div>
+ <div class="card"><h2>💾 Backup</h2><p class="muted">حتى مع Cloud، احتفظ بنسخة JSON دورية.</p><button class="primary" id="exportData">Export JSON</button><label class="file-upload">Import JSON<input id="importData" type="file" accept=".json"></label><button class="danger" id="resetData">حذف البيانات المحلية</button></div>
 </section>
 </main></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"></script>
