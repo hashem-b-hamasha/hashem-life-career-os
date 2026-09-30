@@ -352,7 +352,7 @@ $("resetData").onclick=()=>{if(confirm("سيتم حذف بيانات هذا ال
 
 const FIXED_PASSWORD=["20","03"].join("");
 const CLOUD_CFG="hashem_supabase_cloud_v3";
-const SUPABASE_URL="https://lepffckwdmrcckxnnfdx.supabase.co";
+const SUPABASE_URL="https://lepffckwdmrcckxnffdx.supabase.co";
 let supabaseClient=null, cloudUser=null, cloudTimer=null;
 
 function setCloudStatus(label,ok){const el=$("cloudStatus");if(el){el.textContent=label;el.className="badge "+(ok?"good":"")}}
