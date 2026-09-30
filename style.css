@@ -33,3 +33,13 @@
 #learningMethod ul{margin:0;padding-right:20px;line-height:2}
 .account-card{border:1px solid #cfe0ff}
 @media(max-width:800px){.cv-grid{grid-template-columns:1fr}.cv-hero{flex-direction:column}}
+
+.asset-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.quick-links{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.quick-link{display:block;padding:14px;border:1px solid #e5eaf1;border-radius:12px;background:#fbfcfe;text-decoration:none;color:#172033;transition:.15s}
+.quick-link:hover{transform:translateY(-2px);border-color:#b9c9e6}
+.quick-link b,.quick-link span{display:block}
+.quick-link span{font-size:11px;color:#748093;margin-top:5px}
+@media(max-width:1100px){.quick-links{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.asset-actions,.quick-links{grid-template-columns:1fr}.quick-links{display:grid}}
+@media print{.sidebar,.mobile-head,.auth-screen,.asset-actions{display:none!important}.content{margin:0!important;width:100%!important;padding:0!important}.page{display:none!important}.page#cv{display:block!important}.card{box-shadow:none!important;border:0!important}}
