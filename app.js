@@ -260,10 +260,36 @@ function weekKey(){let d=new Date(),one=new Date(d.getFullYear(),0,1);return "w"
 $("saveReview").onclick=()=>{state.reviews[weekKey()]={win:$("reviewWin").value,block:$("reviewBlock").value,next:$("reviewNext").value};persist();renderReports()}
 
 function loadSettings(){$("startDate").value=state.settings.start;$("endDate").value=state.settings.end;loadCloudConfig()}
-$("saveSettings").onclick=()=>{state.settings.start=$("startDate").value;state.settings.end=$("endDate").value;persist();alert("تم حفظ الفترة")}
+$("saveSettings").onclick=()=>{
+  const start=$("startDate").value,end=$("endDate").value;
+  if(!start||!end)return alert("حدد تاريخ البداية والنهاية.");
+  if(end<start)return alert("تاريخ النهاية يجب أن يكون بعد تاريخ البداية.");
+  state.settings.start=start;
+  state.settings.end=end;
+  persist();
+  alert("تم حفظ الفترة ✓");
+}
 function exportData(){let blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="hashem-life-os-backup-"+today()+".json";a.click()}
 $("exportData").onclick=exportData;
-$("importData").onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{state=JSON.parse(r.result);persist();alert("تم استرجاع النسخة")}catch{alert("الملف غير صالح")}};r.readAsText(f)}
+$("importData").onchange=e=>{
+  let f=e.target.files[0];
+  if(!f)return;
+  let r=new FileReader();
+  r.onload=()=>{
+    try{
+      const imported=JSON.parse(r.result);
+      if(!imported || typeof imported!=="object" || Array.isArray(imported))throw new Error("invalid");
+      state=mergeDeep(defaultState(),imported);
+      persist();
+      alert("تم استرجاع النسخة ✓");
+    }catch{
+      alert("الملف غير صالح أو ليس Backup من النظام.");
+    }finally{
+      e.target.value="";
+    }
+  };
+  r.readAsText(f)
+}
 $("resetData").onclick=()=>{if(confirm("سيتم حذف بيانات هذا المتصفح فقط. نسخة Cloud لن تُحذف. احتفظ بنسخة Export أولًا. هل تريد المتابعة؟")){localStorage.removeItem(LS);localStorage.removeItem("hashem_life_os_unlocked");location.reload()}}
 
 
@@ -350,8 +376,22 @@ function unlockApp(){
   else authMessage("الرقم السري غير صحيح.");
 }
 async function connectDatabase(){
-  try{const session=await ensureCloudSession();await afterAuth(session.user);return true}
-  catch(e){cloudUser=null;setCloudStatus("Cloud Error",false);cloudMessage(e?.message||String(e),false);return false}
+  try{
+    const enteredKey=$("cloudKey")?.value?.trim();
+    if(enteredKey){
+      saveCloudKey(enteredKey);
+      supabaseClient=null;
+      cloudUser=null;
+    }
+    const session=await ensureCloudSession();
+    await afterAuth(session.user);
+    return true;
+  }catch(e){
+    cloudUser=null;
+    setCloudStatus("Cloud Error",false);
+    cloudMessage(e?.message||String(e),false);
+    return false;
+  }
 }
 async function syncDatabase(){
   try{
