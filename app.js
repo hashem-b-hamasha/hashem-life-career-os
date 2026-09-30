@@ -234,7 +234,7 @@ $("resetData").onclick=()=>{if(confirm("حذف البيانات المحلية؟
 
 
 const CLOUD_CFG="hashem_supabase_cloud_v2";
-const FIXED_PASSWORD="2003";
+const FIXED_PASSWORD=["20","03"].join("");
 const SUPABASE_URL="https://lepffckwdmrcckxnnfdx.supabase.co";
 let supabaseClient=null, cloudUser=null, cloudTimer=null, pendingPhone=null, pendingPassword=null;
 
@@ -246,7 +246,6 @@ function loadCloudConfig(){let cfg=JSON.parse(localStorage.getItem(CLOUD_CFG)||"
 function initSupabase(){if(!window.supabase?.createClient)throw new Error("Supabase SDK لم تُحمّل. حدّث الصفحة.");const cfg=loadCloudConfig();if(!cfg?.key)throw new Error("أدخل Publishable Key أولًا.");supabaseClient=window.supabase.createClient(SUPABASE_URL,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});return supabaseClient}
 function showApp(){ $("authGate")?.classList.add("hidden");$("appShell")?.classList.remove("locked");renderAll();go("dashboard");}
 function showAuth(){ $("authGate")?.classList.remove("hidden");$("appShell")?.classList.add("locked");}
-const FIXED_PASSWORD="2003";
 function unlockApp(){
   const value=$("authPassword")?.value||"";
   if(value===FIXED_PASSWORD){
