@@ -304,10 +304,7 @@ async function syncDatabase(){try{if(!supabaseClient||!cloudUser){const ok=await
 
 document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>go(x.dataset.page));
 $("menuBtn").onclick=()=>document.querySelector(".sidebar").classList.toggle("open");
-$("loginTab").onclick=()=>setAuthMode("login");
-$("signupTab").onclick=()=>setAuthMode("signup");
-$("authSubmit").onclick=submitAuth;
-$("verifyOtp").onclick=verifyPhoneOtp;
+// Authentication is handled by the single fixed-password gate below.
 $("signOut").onclick=signOut;
 
 async function start(){
